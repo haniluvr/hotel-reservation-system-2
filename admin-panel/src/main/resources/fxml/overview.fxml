@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox spacing="25" style="-fx-padding: 25px;">
+    <Label text="Dashboard Overview" styleClass="label-title"/>
+    
+    <!-- Metrics will be loaded dynamically -->
+</VBox>
+

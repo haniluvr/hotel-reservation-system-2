@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.image.ImageView?>
+
+<BorderPane fx:id="mainContainer" xmlns="http://javafx.com/javafx/17.0.2-ea" 
+            xmlns:fx="http://javafx.com/fxml/1" 
+            fx:controller="com.belmonthotel.admin.controllers.DashboardController"
+            styleClass="root">
+    
+    <!-- Top Header -->
+    <top>
+        <HBox styleClass="header" alignment="CENTER_LEFT" spacing="20">
+            <padding>
+                <Insets top="15" right="25" bottom="15" left="25"/>
+            </padding>
+            <Label fx:id="userNameLabel" styleClass="header-title" text="Welcome, Admin" />
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Logout" onAction="#handleLogout" styleClass="btn-secondary"/>
+        </HBox>
+    </top>
+
+    <!-- Left Sidebar -->
+    <left>
+        <VBox styleClass="sidebar" spacing="5" prefWidth="250">
+            <padding>
+                <Insets top="20" right="0" bottom="20" left="0"/>
+            </padding>
+            
+            <!-- Logo/Title -->
+            <VBox alignment="CENTER" spacing="5" style="-fx-padding: 0 0 30 0;">
+                <ImageView fx:id="logoImageView" fitWidth="60" fitHeight="60" preserveRatio="true" visible="false" managed="false"/>
+                <Label text="Belmont Hotel" style="-fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold;"/>
+                <Label text="Admin Panel" style="-fx-text-fill: #8b9c7a; -fx-font-size: 12px;"/>
+            </VBox>
+            
+            <Separator style="-fx-background-color: #667f5f;"/>
+            
+            <!-- Navigation Buttons -->
+            <Button fx:id="dashboardBtn" text="Dashboard" styleClass="sidebar-button"/>
+            <Button fx:id="bookingsBtn" text="Bookings" styleClass="sidebar-button"/>
+            <Button fx:id="hotelsBtn" text="Hotels" styleClass="sidebar-button"/>
+            <Button fx:id="roomsBtn" text="Rooms" styleClass="sidebar-button"/>
+            <Button fx:id="usersBtn" text="Customers" styleClass="sidebar-button"/>
+            <Button fx:id="paymentsBtn" text="Payments" styleClass="sidebar-button"/>
+            <Button fx:id="reportsBtn" text="Reports" styleClass="sidebar-button"/>
+        </VBox>
+    </left>
+
+    <!-- Center Content Area -->
+    <center>
+        <ScrollPane fitToWidth="true" styleClass="content-area">
+            <VBox spacing="25" style="-fx-padding: 25px;">
+                <!-- Overview Title -->
+                <Label text="Dashboard Overview" styleClass="label-title"/>
+                
+                <!-- Metrics Cards -->
+                <GridPane hgap="20" vgap="20">
+                    <columnConstraints>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+                        <ColumnConstraints hgrow="ALWAYS" minWidth="200"/>
+                    </columnConstraints>
+                    <rowConstraints>
+                        <RowConstraints vgrow="ALWAYS" minHeight="150"/>
+                        <RowConstraints vgrow="ALWAYS" minHeight="150"/>
+                    </rowConstraints>
+                    
+                    <!-- Total Bookings -->
+                    <VBox styleClass="metric-card" alignment="CENTER" spacing="10" GridPane.columnIndex="0" GridPane.rowIndex="0">
+                        <Label text="Total Bookings" styleClass="metric-label"/>
+                        <Label fx:id="totalBookingsLabel" text="0" styleClass="metric-value"/>
+                    </VBox>
+                    
+                    <!-- Pending Bookings -->
+                    <VBox styleClass="metric-card" alignment="CENTER" spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                        <Label text="Pending Bookings" styleClass="metric-label"/>
+                        <Label fx:id="pendingBookingsLabel" text="0" styleClass="metric-value"/>
+                    </VBox>
+                    
+                    <!-- Confirmed Bookings -->
+                    <VBox styleClass="metric-card" alignment="CENTER" spacing="10" GridPane.columnIndex="2" GridPane.rowIndex="0">
+                        <Label text="Confirmed Bookings" styleClass="metric-label"/>
+                        <Label fx:id="confirmedBookingsLabel" text="0" styleClass="metric-value"/>
+                    </VBox>
+                    
+                    <!-- Total Revenue -->
+                    <VBox styleClass="metric-card" alignment="CENTER" spacing="10" GridPane.columnIndex="0" GridPane.rowIndex="1">
+                        <Label text="Total Revenue" styleClass="metric-label"/>
+                        <Label fx:id="totalRevenueLabel" text="₱0.00" styleClass="metric-value"/>
+                    </VBox>
+                    
+                    <!-- Active Hotels -->
+                    <VBox styleClass="metric-card" alignment="CENTER" spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                        <Label text="Active Hotels" styleClass="metric-label"/>
+                        <Label fx:id="activeHotelsLabel" text="0" styleClass="metric-value"/>
+                    </VBox>
+                    
+                    <!-- Active Users -->
+                    <VBox styleClass="metric-card" alignment="CENTER" spacing="10" GridPane.columnIndex="2" GridPane.rowIndex="1">
+                        <Label text="Active Users" styleClass="metric-label"/>
+                        <Label fx:id="activeUsersLabel" text="0" styleClass="metric-value"/>
+                    </VBox>
+                </GridPane>
+            </VBox>
+        </ScrollPane>
+    </center>
+</BorderPane>
+

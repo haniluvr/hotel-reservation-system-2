@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" 
+      xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.belmonthotel.admin.controllers.HotelsController"
+      spacing="20" style="-fx-padding: 25px;">
+    <Label text="Hotels Management" styleClass="label-title"/>
+    
+    <!-- Search and Actions -->
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField" promptText="Search hotels..." prefWidth="300"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="addBtn" text="Add Hotel" styleClass="btn-primary"/>
+        <Button fx:id="editBtn" text="Edit" styleClass="btn-secondary"/>
+        <Button fx:id="toggleStatusBtn" text="Toggle Status" styleClass="btn-secondary"/>
+        <Button fx:id="deleteBtn" text="Delete" styleClass="btn-danger"/>
+        <Button fx:id="refreshBtn" text="Refresh" styleClass="btn-primary"/>
+    </HBox>
+    
+    <!-- Hotels Table -->
+    <TableView fx:id="hotelsTable" styleClass="table-view" prefHeight="500">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
+            <TableColumn fx:id="nameColumn" text="Name" prefWidth="250"/>
+            <TableColumn fx:id="cityColumn" text="City" prefWidth="150"/>
+            <TableColumn fx:id="countryColumn" text="Country" prefWidth="150"/>
+            <TableColumn fx:id="starRatingColumn" text="Star Rating" prefWidth="100"/>
+            <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
+        </columns>
+    </TableView>
+</VBox>
+

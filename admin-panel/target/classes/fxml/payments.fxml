@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" 
+      xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.belmonthotel.admin.controllers.PaymentsController"
+      spacing="20" style="-fx-padding: 25px;">
+    <Label text="Payments Tracking" styleClass="label-title"/>
+    
+    <!-- Filters and Actions -->
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField" promptText="Search by reservation number or invoice ID..." prefWidth="350"/>
+        <ComboBox fx:id="statusFilter" prefWidth="150" promptText="Status"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="viewDetailsBtn" text="View Details" styleClass="btn-secondary"/>
+        <Button fx:id="refreshBtn" text="Refresh" styleClass="btn-primary"/>
+    </HBox>
+    
+    <!-- Payments Table -->
+    <TableView fx:id="paymentsTable" styleClass="table-view" prefHeight="500">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
+            <TableColumn fx:id="reservationNumberColumn" text="Reservation #" prefWidth="150"/>
+            <TableColumn fx:id="amountColumn" text="Amount" prefWidth="120"/>
+            <TableColumn fx:id="paymentMethodColumn" text="Payment Method" prefWidth="150"/>
+            <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
+            <TableColumn fx:id="paidAtColumn" text="Paid At" prefWidth="150"/>
+            <TableColumn fx:id="xenditInvoiceIdColumn" text="Xendit Invoice ID" prefWidth="200"/>
+        </columns>
+    </TableView>
+</VBox>
+

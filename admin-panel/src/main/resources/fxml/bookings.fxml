@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" 
+      xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.belmonthotel.admin.controllers.BookingsController"
+      spacing="20" style="-fx-padding: 25px;">
+    <Label text="Bookings Management" styleClass="label-title"/>
+    
+    <!-- Filters and Search -->
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField" promptText="Search by reservation number, guest name, or hotel..." 
+                   prefWidth="300"/>
+        <ComboBox fx:id="statusFilter" prefWidth="150" promptText="Status"/>
+        <DatePicker fx:id="dateFromFilter" promptText="From Date"/>
+        <DatePicker fx:id="dateToFilter" promptText="To Date"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="refreshBtn" text="Refresh" styleClass="btn-primary"/>
+    </HBox>
+    
+    <!-- Actions -->
+    <HBox spacing="10">
+        <Button fx:id="viewDetailsBtn" text="View Details" styleClass="btn-secondary"/>
+        <Button fx:id="confirmBtn" text="Confirm Booking" styleClass="btn-primary"/>
+        <Button fx:id="cancelBtn" text="Cancel Booking" styleClass="btn-danger"/>
+    </HBox>
+    
+    <!-- Bookings Table -->
+    <TableView fx:id="bookingsTable" styleClass="table-view" prefHeight="500">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
+            <TableColumn fx:id="reservationNumberColumn" text="Reservation #" prefWidth="150"/>
+            <TableColumn fx:id="guestNameColumn" text="Guest Name" prefWidth="150"/>
+            <TableColumn fx:id="hotelColumn" text="Hotel" prefWidth="200"/>
+            <TableColumn fx:id="roomColumn" text="Room Type" prefWidth="150"/>
+            <TableColumn fx:id="checkInColumn" text="Check-in" prefWidth="100"/>
+            <TableColumn fx:id="checkOutColumn" text="Check-out" prefWidth="100"/>
+            <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
+            <TableColumn fx:id="amountColumn" text="Amount" prefWidth="120"/>
+        </columns>
+    </TableView>
+</VBox>
+

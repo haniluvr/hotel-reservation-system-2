@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" 
+      xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.belmonthotel.admin.controllers.UsersController"
+      spacing="20" style="-fx-padding: 25px;">
+    <Label text="Customers Management" styleClass="label-title"/>
+    
+    <!-- Filters and Actions -->
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField" promptText="Search customers..." prefWidth="300"/>
+        <ComboBox fx:id="roleFilter" prefWidth="150" promptText="Role"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="viewDetailsBtn" text="View Details" styleClass="btn-secondary"/>
+        <Button fx:id="refreshBtn" text="Refresh" styleClass="btn-primary"/>
+    </HBox>
+    
+    <!-- Users Table -->
+    <TableView fx:id="usersTable" styleClass="table-view" prefHeight="500">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
+            <TableColumn fx:id="nameColumn" text="Name" prefWidth="200"/>
+            <TableColumn fx:id="emailColumn" text="Email" prefWidth="250"/>
+            <TableColumn fx:id="roleColumn" text="Role" prefWidth="100"/>
+            <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
+            <TableColumn fx:id="createdAtColumn" text="Created At" prefWidth="150"/>
+        </columns>
+    </TableView>
+</VBox>
+

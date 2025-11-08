@@ -1,0 +1,161 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class HotelSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        $hotels = [
+            [
+                'name' => 'Belmont Hotel Manila',
+                'description' => 'Luxury hotel in the heart of Manila with stunning city views and world-class amenities.',
+                'address' => '123 Ayala Avenue, Makati City',
+                'city' => 'Manila',
+                'country' => 'Philippines',
+                'latitude' => 14.5547,
+                'longitude' => 121.0244,
+                'star_rating' => 5,
+                'amenities' => json_encode(['Pool', 'Spa', 'Gym', 'WiFi', 'Parking', 'Restaurant', 'Bar', 'Room Service']),
+                'images' => json_encode(['hotel1.jpg', 'hotel2.jpg', 'hotel3.jpg']),
+                'hotelbeds_code' => 'HB001',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Belmont Hotel Cebu',
+                'description' => 'Beachfront resort with pristine white sand beaches and crystal clear waters.',
+                'address' => '456 Mactan Island, Lapu-Lapu City',
+                'city' => 'Cebu',
+                'country' => 'Philippines',
+                'latitude' => 10.3157,
+                'longitude' => 123.8854,
+                'star_rating' => 4,
+                'amenities' => json_encode(['Beach Access', 'Pool', 'Spa', 'WiFi', 'Parking', 'Restaurant', 'Water Sports']),
+                'images' => json_encode(['cebu1.jpg', 'cebu2.jpg', 'cebu3.jpg']),
+                'hotelbeds_code' => 'HB002',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Belmont Hotel Boracay',
+                'description' => 'Tropical paradise with world-famous beaches and vibrant nightlife.',
+                'address' => '789 White Beach, Boracay Island',
+                'city' => 'Boracay',
+                'country' => 'Philippines',
+                'latitude' => 11.9674,
+                'longitude' => 121.9248,
+                'star_rating' => 5,
+                'amenities' => json_encode(['Beach Access', 'Pool', 'Spa', 'WiFi', 'Restaurant', 'Bar', 'Water Sports', 'Diving']),
+                'images' => json_encode(['boracay1.jpg', 'boracay2.jpg', 'boracay3.jpg']),
+                'hotelbeds_code' => 'HB003',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Belmont Hotel Palawan',
+                'description' => 'Eco-friendly resort surrounded by lush forests and pristine lagoons.',
+                'address' => '321 El Nido, Palawan',
+                'city' => 'Palawan',
+                'country' => 'Philippines',
+                'latitude' => 11.2048,
+                'longitude' => 119.4406,
+                'star_rating' => 4,
+                'amenities' => json_encode(['Pool', 'Spa', 'WiFi', 'Restaurant', 'Eco Tours', 'Kayaking', 'Snorkeling']),
+                'images' => json_encode(['palawan1.jpg', 'palawan2.jpg', 'palawan3.jpg']),
+                'hotelbeds_code' => 'HB004',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Belmont Hotel Baguio',
+                'description' => 'Mountain retreat with cool climate and panoramic mountain views.',
+                'address' => '654 Session Road, Baguio City',
+                'city' => 'Baguio',
+                'country' => 'Philippines',
+                'latitude' => 16.4023,
+                'longitude' => 120.5960,
+                'star_rating' => 3,
+                'amenities' => json_encode(['WiFi', 'Parking', 'Restaurant', 'Bar', 'Mountain Views', 'Hiking']),
+                'images' => json_encode(['baguio1.jpg', 'baguio2.jpg', 'baguio3.jpg']),
+                'hotelbeds_code' => 'HB005',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Belmont Hotel Davao',
+                'description' => 'Business hotel with modern facilities and excellent conference rooms.',
+                'address' => '987 Roxas Avenue, Davao City',
+                'city' => 'Davao',
+                'country' => 'Philippines',
+                'latitude' => 7.0731,
+                'longitude' => 125.6128,
+                'star_rating' => 4,
+                'amenities' => json_encode(['Pool', 'Gym', 'WiFi', 'Parking', 'Restaurant', 'Business Center', 'Conference Rooms']),
+                'images' => json_encode(['davao1.jpg', 'davao2.jpg', 'davao3.jpg']),
+                'hotelbeds_code' => 'HB006',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Belmont Hotel Iloilo',
+                'description' => 'Historic hotel with colonial architecture and modern comforts.',
+                'address' => '147 Calle Real, Iloilo City',
+                'city' => 'Iloilo',
+                'country' => 'Philippines',
+                'latitude' => 10.7202,
+                'longitude' => 122.5621,
+                'star_rating' => 3,
+                'amenities' => json_encode(['WiFi', 'Parking', 'Restaurant', 'Historic Tours', 'Cultural Shows']),
+                'images' => json_encode(['iloilo1.jpg', 'iloilo2.jpg', 'iloilo3.jpg']),
+                'hotelbeds_code' => 'HB007',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Belmont Hotel Bohol',
+                'description' => 'Resort with chocolate hills view and tarsier sanctuary access.',
+                'address' => '258 Tagbilaran City, Bohol',
+                'city' => 'Bohol',
+                'country' => 'Philippines',
+                'latitude' => 9.6779,
+                'longitude' => 123.8780,
+                'star_rating' => 4,
+                'amenities' => json_encode(['Pool', 'WiFi', 'Restaurant', 'Nature Tours', 'Tarsier Sanctuary', 'Chocolate Hills']),
+                'images' => json_encode(['bohol1.jpg', 'bohol2.jpg', 'bohol3.jpg']),
+                'hotelbeds_code' => 'HB008',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Belmont Hotel Siargao',
+                'description' => 'Surfing paradise with world-class waves and laid-back atmosphere.',
+                'address' => '369 General Luna, Siargao Island',
+                'city' => 'Siargao',
+                'country' => 'Philippines',
+                'latitude' => 9.7832,
+                'longitude' => 126.0642,
+                'star_rating' => 3,
+                'amenities' => json_encode(['Beach Access', 'WiFi', 'Restaurant', 'Surfing', 'Island Hopping', 'Diving']),
+                'images' => json_encode(['siargao1.jpg', 'siargao2.jpg', 'siargao3.jpg']),
+                'hotelbeds_code' => 'HB009',
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Belmont Hotel Coron',
+                'description' => 'Island resort with crystal clear waters and limestone cliffs.',
+                'address' => '741 Coron Town, Busuanga Island',
+                'city' => 'Coron',
+                'country' => 'Philippines',
+                'latitude' => 12.0042,
+                'longitude' => 120.2040,
+                'star_rating' => 4,
+                'amenities' => json_encode(['Beach Access', 'Pool', 'WiFi', 'Restaurant', 'Island Hopping', 'Diving', 'Kayaking']),
+                'images' => json_encode(['coron1.jpg', 'coron2.jpg', 'coron3.jpg']),
+                'hotelbeds_code' => 'HB010',
+                'is_active' => true,
+            ],
+        ];
+
+        DB::table('hotels')->insert($hotels);
+    }
+}

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" 
+      xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.belmonthotel.admin.controllers.RoomsController"
+      spacing="20" style="-fx-padding: 25px;">
+    <Label text="Rooms Management" styleClass="label-title"/>
+    
+    <!-- Filters and Actions -->
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <TextField fx:id="searchField" promptText="Search rooms..." prefWidth="250"/>
+        <ComboBox fx:id="hotelFilter" prefWidth="200" promptText="Filter by Hotel"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="addBtn" text="Add Room" styleClass="btn-primary"/>
+        <Button fx:id="editBtn" text="Edit" styleClass="btn-secondary"/>
+        <Button fx:id="deleteBtn" text="Delete" styleClass="btn-danger"/>
+        <Button fx:id="refreshBtn" text="Refresh" styleClass="btn-primary"/>
+    </HBox>
+    
+    <!-- Rooms Table -->
+    <TableView fx:id="roomsTable" styleClass="table-view" prefHeight="500">
+        <columns>
+            <TableColumn fx:id="idColumn" text="ID" prefWidth="50"/>
+            <TableColumn fx:id="hotelColumn" text="Hotel" prefWidth="200"/>
+            <TableColumn fx:id="roomTypeColumn" text="Room Type" prefWidth="150"/>
+            <TableColumn fx:id="priceColumn" text="Price/Night" prefWidth="120"/>
+            <TableColumn fx:id="quantityColumn" text="Quantity" prefWidth="80"/>
+            <TableColumn fx:id="availableColumn" text="Available" prefWidth="80"/>
+            <TableColumn fx:id="maxGuestsColumn" text="Max Guests" prefWidth="100"/>
+            <TableColumn fx:id="statusColumn" text="Status" prefWidth="100"/>
+        </columns>
+    </TableView>
+</VBox>
+

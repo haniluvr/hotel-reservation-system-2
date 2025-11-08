@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/17.0.2-ea" 
+      xmlns:fx="http://javafx.com/fxml/1" 
+      fx:controller="com.belmonthotel.admin.controllers.ReportsController"
+      spacing="20" style="-fx-padding: 25px;">
+    <Label text="Reports Generation" styleClass="label-title"/>
+    
+    <!-- Report Options -->
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <Label text="Report Type:" style="-fx-font-weight: bold;"/>
+        <ComboBox fx:id="reportTypeCombo" prefWidth="200"/>
+        <Region HBox.hgrow="ALWAYS"/>
+    </HBox>
+    
+    <HBox spacing="15" alignment="CENTER_LEFT">
+        <Label text="From Date:" style="-fx-font-weight: bold;"/>
+        <DatePicker fx:id="dateFromPicker"/>
+        <Label text="To Date:" style="-fx-font-weight: bold;"/>
+        <DatePicker fx:id="dateToPicker"/>
+        <Region HBox.hgrow="ALWAYS"/>
+    </HBox>
+    
+    <!-- Report Preview -->
+    <VBox spacing="10">
+        <Label text="Report Preview:" styleClass="label-subtitle"/>
+        <TextArea fx:id="reportPreview" prefHeight="200" editable="false" 
+                 style="-fx-font-family: 'Courier New';"/>
+    </VBox>
+    
+    <!-- Generate Buttons -->
+    <HBox spacing="15">
+        <Button fx:id="generateExcelBtn" text="Generate Excel Report" styleClass="btn-primary" 
+               prefWidth="200"/>
+        <Button fx:id="generatePDFBtn" text="Generate PDF Report" styleClass="btn-secondary" 
+               prefWidth="200"/>
+    </HBox>
+</VBox>
+
