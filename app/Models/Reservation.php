@@ -64,6 +64,14 @@ class Reservation extends Model
     }
 
     /**
+     * Get the review for the reservation.
+     */
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
+    }
+
+    /**
      * Scope a query to only include pending reservations.
      */
     public function scopePending($query)

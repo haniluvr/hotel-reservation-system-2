@@ -50,9 +50,6 @@ public class RoomsController implements Initializable {
     private TableColumn<Room, String> statusColumn;
 
     @FXML
-    private ComboBox<String> hotelFilter;
-
-    @FXML
     private TextField searchField;
 
     @FXML
@@ -95,7 +92,6 @@ public class RoomsController implements Initializable {
         refreshBtn.setOnAction(e -> loadRooms());
 
         // Set filter actions
-        hotelFilter.setOnAction(e -> applyFilters());
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
 
         // Load initial data
@@ -104,25 +100,11 @@ public class RoomsController implements Initializable {
 
     /**
      * Load hotel names for filter dropdown.
+     * Since there's only one hotel, no filter needed.
      */
     private void loadHotelNames() {
         hotelNames.clear();
-        hotelNames.add("All Hotels");
-
-        String query = "SELECT DISTINCT name FROM hotels ORDER BY name";
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                hotelNames.add(rs.getString("name"));
-            }
-
-            hotelFilter.setItems(hotelNames);
-            hotelFilter.setValue("All Hotels");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
+        // Only one hotel, so no filter needed
     }
 
     /**
@@ -168,20 +150,11 @@ public class RoomsController implements Initializable {
     private void applyFilters() {
         ObservableList<Room> filtered = FXCollections.observableArrayList();
         String searchText = searchField.getText().toLowerCase();
-        String selectedHotel = hotelFilter.getValue();
 
         for (Room room : roomsList) {
-            // Hotel filter
-            if (selectedHotel != null && !selectedHotel.equals("All Hotels")) {
-                if (!room.getHotelName().equals(selectedHotel)) {
-                    continue;
-                }
-            }
-
             // Search filter
             if (!searchText.isEmpty()) {
-                if (!room.getRoomType().toLowerCase().contains(searchText) &&
-                    !room.getHotelName().toLowerCase().contains(searchText)) {
+                if (!room.getRoomType().toLowerCase().contains(searchText)) {
                     continue;
                 }
             }
@@ -196,26 +169,32 @@ public class RoomsController implements Initializable {
      * Show room form for add/edit.
      */
     private void showRoomForm(Room room) {
-        // Load hotels for dropdown
-        ObservableList<String> hotels = FXCollections.observableArrayList();
-        String hotelQuery = "SELECT id, name FROM hotels ORDER BY name";
+        // Get the only hotel (Belmont Hotel)
+        final int[] hotelIdArray = {1}; // Since there's only one hotel
+        String[] hotelNameArray = {"Belmont Hotel"};
         
         try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(hotelQuery);
+             PreparedStatement stmt = conn.prepareStatement("SELECT id, name FROM hotels LIMIT 1");
              ResultSet rs = stmt.executeQuery()) {
             
-            while (rs.next()) {
-                hotels.add(rs.getInt("id") + " - " + rs.getString("name"));
+            if (rs.next()) {
+                hotelIdArray[0] = rs.getInt("id");
+                hotelNameArray[0] = rs.getString("name");
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        
+        final int hotelId = hotelIdArray[0];
+        final String hotelName = hotelNameArray[0];
 
         Dialog<Room> dialog = new Dialog<>();
         dialog.setTitle(room == null ? "Add Room" : "Edit Room");
         dialog.setHeaderText(null);
 
-        ComboBox<String> hotelCombo = new ComboBox<>(hotels);
+        // No hotel combo needed since there's only one hotel
+        Label hotelLabel = new Label(hotelName);
+        hotelLabel.setStyle("-fx-font-weight: bold;");
         TextField roomTypeField = new TextField();
         TextArea descriptionField = new TextArea();
         TextField priceField = new TextField();
@@ -238,7 +217,7 @@ public class RoomsController implements Initializable {
         grid.setPadding(new Insets(20));
 
         grid.add(new Label("Hotel:"), 0, 0);
-        grid.add(hotelCombo, 1, 0);
+        grid.add(hotelLabel, 1, 0);
         grid.add(new Label("Room Type:"), 0, 1);
         grid.add(roomTypeField, 1, 1);
         grid.add(new Label("Description:"), 0, 2);
@@ -263,12 +242,8 @@ public class RoomsController implements Initializable {
                 result.setMaxGuests(maxGuestsSpinner.getValue());
                 result.setStatus(isActiveCheckBox.isSelected() ? "Active" : "Inactive");
                 
-                // Extract hotel ID
-                String selectedHotel = hotelCombo.getValue();
-                if (selectedHotel != null && selectedHotel.contains(" - ")) {
-                    int hotelId = Integer.parseInt(selectedHotel.split(" - ")[0]);
-                    result.setHotelId(hotelId);
-                }
+                // Set hotel ID (only one hotel)
+                result.setHotelId(hotelId);
                 
                 return result;
             }

@@ -16,23 +16,23 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            HotelSeeder::class,
-            RoomSeeder::class,
-            PromoCodeSeeder::class,
+            BelmontHotelSeeder::class,
+            // PromoCodeSeeder::class, // Uncomment if you want to seed promo codes later
         ]);
 
-        // Create test users
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Only create users if they don't exist (preserve existing login credentials)
+        if (!User::where('email', 'admin@belmonthotel.com')->exists()) {
+            User::factory()->create([
+                'name' => 'Admin User',
+                'email' => 'admin@belmonthotel.com',
+            ]);
+        }
 
-        User::factory()->create([
-            'name' => 'Admin User',
-            'email' => 'admin@belmonthotel.com',
-        ]);
-
-        // Create additional sample users
-        User::factory(8)->create();
+        if (!User::where('email', 'test@example.com')->exists()) {
+            User::factory()->create([
+                'name' => 'Test User',
+                'email' => 'test@example.com',
+            ]);
+        }
     }
 }

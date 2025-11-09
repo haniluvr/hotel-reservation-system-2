@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', $hotel->name . ' - Belmont Hotel')
+@section('title', $hotel->name . ' - The Belmont Hotel - Discover Your Perfect Getaway. Experience luxury and comfort at Belmont Hotel El Nido, Palawan.')
 
 @section('content')
 <!-- Hotel Header -->
@@ -8,7 +8,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col lg:flex-row gap-8 items-start">
             <div class="flex-1">
-                <h1 class="text-3xl sm:text-4xl font-cormorant font-bold text-gray-900 mb-4">
+                <h1 class="text-3xl sm:text-4xl  font-bold text-gray-900 mb-4">
                     {{ $hotel->name }}
                 </h1>
                 <p class="text-lg text-gray-600 mb-4">{{ $hotel->city }}, {{ $hotel->country }}</p>
@@ -65,7 +65,7 @@
 <!-- Hotel Gallery -->
 <section class="py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-2xl font-cormorant font-bold text-gray-900 mb-8">Hotel Gallery</h2>
+        <h2 class="text-2xl  font-bold text-gray-900 mb-8">Hotel Gallery</h2>
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <!-- Main Image -->
@@ -97,7 +97,7 @@
 <!-- Amenities -->
 <section class="py-12 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-2xl font-cormorant font-bold text-gray-900 mb-8">Hotel Amenities</h2>
+        <h2 class="text-2xl  font-bold text-gray-900 mb-8">Hotel Amenities</h2>
         
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
             @foreach($hotel->amenities ?? [] as $amenity)
@@ -117,7 +117,7 @@
 <!-- Available Rooms -->
 <section class="py-12">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-2xl font-cormorant font-bold text-gray-900 mb-8">Available Rooms</h2>
+        <h2 class="text-2xl  font-bold text-gray-900 mb-8">Available Rooms</h2>
         
         <div class="space-y-6">
             @foreach($hotel->rooms as $room)
@@ -175,7 +175,7 @@
                                 <div class="text-sm text-gray-500 mb-4">per night</div>
                                 
                                 @if($room->available_quantity > 0)
-                                    <a href="{{ route('rooms.show', [$hotel->id, $room->id]) }}" 
+                                    <a href="{{ route('rooms.show', $room->slug) }}" 
                                        class="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors duration-200">
                                         Book Now
                                     </a>
@@ -199,7 +199,7 @@
 @if($relatedHotels->count() > 0)
 <section class="py-12 bg-gray-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-2xl font-cormorant font-bold text-gray-900 mb-8">Similar Hotels in {{ $hotel->city }}</h2>
+        <h2 class="text-2xl  font-bold text-gray-900 mb-8">Similar Hotels in {{ $hotel->city }}</h2>
         
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             @foreach($relatedHotels as $relatedHotel)

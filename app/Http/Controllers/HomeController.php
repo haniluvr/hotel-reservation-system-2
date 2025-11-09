@@ -17,115 +17,117 @@ class HomeController extends Controller
     }
 
     /**
-     * Display the homepage with scroll expansion hero
+     * Display the homepage - Belmont Hotel El Nido
      */
     public function index()
     {
-        // Get featured hotels
-        $featuredHotels = Hotel::with(['rooms' => function ($query) {
+        // Get Belmont Hotel (single property)
+        $hotel = Hotel::with(['rooms' => function ($query) {
             $query->active()->available();
         }])
-        ->active()
-        ->withStars(4)
-        ->limit(6)
-        ->get();
+        ->where('name', 'Belmont Hotel')
+        ->firstOrFail();
 
-        // Get popular destinations with images and hotel counts
+        // Get featured rooms (first 6 active rooms)
+        $featuredRooms = $hotel->rooms()
+            ->active()
+            ->available()
+            ->limit(6)
+            ->get()
+            ->map(function ($room) {
+                return [
+                    'id' => $room->id,
+                    'name' => $room->room_type,
+                    'slug' => $room->slug,
+                    'price' => $room->price_per_night,
+                    'description' => $room->description,
+                    'image' => $room->getRoomImages()[0] ?? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
+                    'images' => $room->getRoomImages(),
+                ];
+            });
+
         $popularDestinations = [
             [
-                'name' => 'Manila',
-                'image' => 'https://images.unsplash.com/photo-1555993539-1732b0258235?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-                'count' => Hotel::where('city', 'Manila')->active()->count() . ' hotels'
+                'name' => 'Big Lagoon',
+                'image' => 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=900&auto=format&fit=crop&q=80',
+                'count' => 'Beach • Snorkeling',
+                'description' => 'Hidden paradise accessible through a narrow opening'
             ],
             [
-                'name' => 'Cebu',
-                'image' => 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-                'count' => Hotel::where('city', 'Cebu')->active()->count() . ' hotels'
+                'name' => 'Small Lagoon',
+                'image' => 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=900&auto=format&fit=crop&q=80',
+                'count' => 'Beach • Snorkeling',
+                'description' => 'Hidden paradise accessible through a narrow opening'
             ],
             [
-                'name' => 'Boracay',
-                'image' => 'https://images.unsplash.com/photo-1506905925346-14bda5d4f34f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-                'count' => Hotel::where('city', 'Boracay')->active()->count() . ' hotels'
-            ],
-            [
-                'name' => 'Palawan',
-                'image' => 'https://images.unsplash.com/photo-1506905925346-14bda5d4f34f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-                'count' => Hotel::where('city', 'Palawan')->active()->count() . ' hotels'
-            ],
-            [
-                'name' => 'Davao',
-                'image' => 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-                'count' => Hotel::where('city', 'Davao')->active()->count() . ' hotels'
-            ],
-            [
-                'name' => 'Baguio',
-                'image' => 'https://images.unsplash.com/photo-1555993539-1732b0258235?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-                'count' => Hotel::where('city', 'Baguio')->active()->count() . ' hotels'
-            ],
-            [
-                'name' => 'Iloilo',
-                'image' => 'https://images.unsplash.com/photo-1506905925346-14bda5d4f34f?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-                'count' => Hotel::where('city', 'Iloilo')->active()->count() . ' hotels'
-            ],
-            [
-                'name' => 'Bohol',
-                'image' => 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80',
-                'count' => Hotel::where('city', 'Bohol')->active()->count() . ' hotels'
+                'name' => 'Secret Lagoon',
+                'image' => 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=900&auto=format&fit=crop&q=80',
+                'count' => 'Beach • Snorkeling',
+                'description' => 'Hidden paradise accessible through a narrow opening'
             ]
         ];
 
-        return view('home', compact('featuredHotels', 'popularDestinations'));
+        return view('home', compact('hotel', 'featuredRooms', 'popularDestinations'));
     }
 
     /**
-     * Search hotels
+     * Search rooms (updated to return rooms instead of hotels)
      */
     public function search(Request $request)
     {
-        $query = Hotel::with(['rooms' => function ($q) {
-            $q->active()->available();
-        }]);
+        // Get Belmont Hotel
+        $hotel = Hotel::where('name', 'Belmont Hotel')->firstOrFail();
+
+        // Start with all rooms
+        $query = Room::where('hotel_id', $hotel->id)->active();
 
         // Apply search filters
-        if ($request->filled('destination')) {
-            $query->inCity($request->destination);
+        if ($request->filled('room_type')) {
+            $query->where('room_type', $request->room_type);
         }
 
         if ($request->filled('check_in') && $request->filled('check_out')) {
-            // Filter rooms by availability for the selected dates
-            $query->whereHas('rooms', function ($q) use ($request) {
-                $q->where('available_quantity', '>', 0);
-            });
+            // Filter by availability - rooms with available quantity > 0
+            $query->where('available_quantity', '>', 0);
         }
 
-        if ($request->filled('guests')) {
-            $query->whereHas('rooms', function ($q) use ($request) {
-                $q->forGuests($request->guests);
-            });
+        if ($request->filled('adults') || $request->filled('children')) {
+            $totalGuests = ($request->adults ?? 0) + ($request->children ?? 0);
+            if ($totalGuests > 0) {
+                $query->where('max_guests', '>=', $totalGuests);
+            }
+            if ($request->filled('adults')) {
+                $query->where('max_adults', '>=', $request->adults);
+            }
         }
 
-        if ($request->filled('min_price') && $request->filled('max_price')) {
-            $query->whereHas('rooms', function ($q) use ($request) {
-                $q->priceRange($request->min_price, $request->max_price);
-            });
+        if ($request->filled('min_price')) {
+            $query->where('price_per_night', '>=', $request->min_price);
         }
 
-        if ($request->filled('stars')) {
-            $query->withStars($request->stars);
+        if ($request->filled('max_price')) {
+            $query->where('price_per_night', '<=', $request->max_price);
         }
 
-        if ($request->filled('amenities')) {
-            $amenities = is_array($request->amenities) ? $request->amenities : [$request->amenities];
-            $query->where(function ($q) use ($amenities) {
-                foreach ($amenities as $amenity) {
-                    $q->orWhereJsonContains('amenities', $amenity);
-                }
-            });
+        // Apply sorting
+        $sort = $request->get('sort', 'popularity');
+        switch ($sort) {
+            case 'price_low':
+                $query->orderBy('price_per_night', 'asc');
+                break;
+            case 'price_high':
+                $query->orderBy('price_per_night', 'desc');
+                break;
+            case 'popularity':
+            default:
+                $query->orderBy('available_quantity', 'desc')
+                      ->orderBy('price_per_night', 'asc');
+                break;
         }
 
-        $hotels = $query->active()->paginate(12);
+        $rooms = $query->with('hotel')->paginate(12);
 
-        return view('hotels.search', compact('hotels'));
+        return view('hotels.search', compact('rooms', 'hotel'));
     }
 
     /**
@@ -149,16 +151,16 @@ class HomeController extends Controller
     /**
      * Show room details
      */
-    public function showRoom($hotelId, $roomId)
+    public function showRoom($slug)
     {
-        $hotel = Hotel::findOrFail($hotelId);
-        $room = Room::where('hotel_id', $hotelId)
-            ->where('id', $roomId)
+        $room = Room::where('slug', $slug)
             ->active()
             ->firstOrFail();
 
-        $similarRooms = Room::where('hotel_id', $hotelId)
-            ->where('id', '!=', $roomId)
+        $hotel = $room->hotel;
+
+        $similarRooms = Room::where('hotel_id', $hotel->id)
+            ->where('id', '!=', $room->id)
             ->where('room_type', 'like', '%' . explode(' ', $room->room_type)[0] . '%')
             ->active()
             ->limit(3)
@@ -192,5 +194,69 @@ class HomeController extends Controller
             });
 
         return response()->json($suggestions);
+    }
+
+    /**
+     * Display all accommodations (rooms)
+     */
+    public function accommodations(Request $request)
+    {
+        // Get Belmont Hotel (should be the only hotel)
+        $hotel = Hotel::firstOrFail();
+
+        // Start with all rooms
+        $query = Room::where('hotel_id', $hotel->id)->active();
+
+        // Apply filters
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('room_type', 'like', '%' . $search . '%')
+                  ->orWhere('description', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->filled('room_type')) {
+            $query->where('room_type', $request->room_type);
+        }
+
+        if ($request->filled('min_price')) {
+            $query->where('price_per_night', '>=', $request->min_price);
+        }
+
+        if ($request->filled('max_price')) {
+            $query->where('price_per_night', '<=', $request->max_price);
+        }
+
+        if ($request->filled('adults') || $request->filled('children')) {
+            $totalGuests = ($request->adults ?? 0) + ($request->children ?? 0);
+            if ($totalGuests > 0) {
+                $query->where('max_guests', '>=', $totalGuests);
+            }
+            if ($request->filled('adults')) {
+                $query->where('max_adults', '>=', $request->adults);
+            }
+        }
+
+        // Apply sorting
+        $sort = $request->get('sort', 'popularity');
+        switch ($sort) {
+            case 'price_low':
+                $query->orderBy('price_per_night', 'asc');
+                break;
+            case 'price_high':
+                $query->orderBy('price_per_night', 'desc');
+                break;
+            case 'popularity':
+            default:
+                // Default: Sort by availability (most available first), then by price
+                $query->orderBy('available_quantity', 'desc')
+                      ->orderBy('price_per_night', 'asc');
+                break;
+        }
+
+        $rooms = $query->paginate(12);
+
+        return view('accommodations.index', compact('rooms', 'hotel'));
     }
 }

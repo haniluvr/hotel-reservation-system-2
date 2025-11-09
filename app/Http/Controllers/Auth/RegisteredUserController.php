@@ -45,6 +45,20 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        // Check for return URL from sessionStorage (passed via hidden input or session)
+        $returnUrl = $request->input('return_url') ?? $request->session()->get('auth_return_url');
+        
+        if ($returnUrl && filter_var($returnUrl, FILTER_VALIDATE_URL)) {
+            // Validate it's from the same domain
+            $parsedUrl = parse_url($returnUrl);
+            $currentHost = parse_url(config('app.url'), PHP_URL_HOST);
+            
+            if ($parsedUrl && isset($parsedUrl['host']) && $parsedUrl['host'] === $currentHost) {
+                $request->session()->forget('auth_return_url');
+                return redirect($returnUrl);
+            }
+        }
+
+        return redirect(route('home', absolute: false));
     }
 }

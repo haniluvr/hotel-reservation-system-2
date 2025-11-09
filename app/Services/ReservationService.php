@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Models\Payment;
@@ -11,6 +12,7 @@ use App\Models\TransactionLog;
 use App\DataStructures\BookingQueue;
 use App\DataStructures\HashTable;
 use App\DataStructures\TransactionStack;
+use App\Mail\BookingConfirmation;
 use Carbon\Carbon;
 
 /**
@@ -61,6 +63,13 @@ class ReservationService
                     'after_quantity' => $room->available_quantity,
                     'change' => -1
                 ]);
+
+                // Step 6: Send confirmation email
+                try {
+                    Mail::to($reservation->user->email)->send(new BookingConfirmation($reservation));
+                } catch (\Exception $e) {
+                    Log::warning('Failed to send booking confirmation email: ' . $e->getMessage());
+                }
 
                 return [
                     'success' => true,
@@ -157,14 +166,144 @@ class ReservationService
                     'reason' => $reason
                 ]);
 
+                // Calculate refund amount if payment was made
+                $refundAmount = null;
+                if ($reservation->payment && $reservation->payment->status === 'paid') {
+                    // Calculate refund based on cancellation policy
+                    $checkInDate = Carbon::parse($reservation->check_in_date);
+                    $daysUntilCheckIn = now()->diffInDays($checkInDate, false);
+                    
+                    if ($daysUntilCheckIn >= 7) {
+                        // Full refund if cancelled 7+ days before check-in
+                        $refundAmount = $reservation->payment->amount;
+                    } elseif ($daysUntilCheckIn >= 3) {
+                        // 50% refund if cancelled 3-6 days before check-in
+                        $refundAmount = $reservation->payment->amount * 0.5;
+                    }
+                    // No refund if cancelled less than 3 days before check-in
+                }
+
+                // Send cancellation email
+                try {
+                    Mail::to($reservation->user->email)->send(new \App\Mail\BookingCancellation($reservation->fresh(), $refundAmount));
+                } catch (\Exception $e) {
+                    Log::warning('Failed to send cancellation email: ' . $e->getMessage());
+                }
+
                 return [
                     'success' => true,
                     'reservation' => $reservation->fresh(),
+                    'refund_amount' => $refundAmount,
                     'message' => 'Reservation cancelled successfully'
                 ];
 
             } catch (\Exception $e) {
                 Log::error('Reservation cancellation failed: ' . $e->getMessage());
+                
+                return [
+                    'success' => false,
+                    'error' => $e->getMessage()
+                ];
+            }
+        });
+    }
+
+    /**
+     * Modify a reservation (change dates, recalculate price)
+     */
+    public function modifyReservation(int $reservationId, array $modificationData): array
+    {
+        return DB::transaction(function () use ($reservationId, $modificationData) {
+            try {
+                $reservation = Reservation::findOrFail($reservationId);
+                
+                if (!$reservation->canBeModified()) {
+                    throw new \Exception('Reservation cannot be modified');
+                }
+
+                $oldCheckIn = $reservation->check_in_date;
+                $oldCheckOut = $reservation->check_out_date;
+                $oldAmount = $reservation->total_amount;
+
+                // Update dates if provided
+                if (isset($modificationData['check_in_date'])) {
+                    $reservation->check_in_date = $modificationData['check_in_date'];
+                }
+                if (isset($modificationData['check_out_date'])) {
+                    $reservation->check_out_date = $modificationData['check_out_date'];
+                }
+
+                // Validate new dates
+                $checkIn = Carbon::parse($reservation->check_in_date);
+                $checkOut = Carbon::parse($reservation->check_out_date);
+                
+                if ($checkIn->isPast()) {
+                    throw new \Exception('Check-in date cannot be in the past');
+                }
+                
+                if ($checkOut->lte($checkIn)) {
+                    throw new \Exception('Check-out date must be after check-in date');
+                }
+
+                // Check room availability for new dates
+                if (!$this->checkAvailability($reservation->room_id, $reservation->check_in_date, $reservation->check_out_date)) {
+                    throw new \Exception('Room not available for the selected dates');
+                }
+
+                // Recalculate total amount
+                $nights = $checkIn->diffInDays($checkOut);
+                $room = Room::find($reservation->room_id);
+                $newAmount = $room->price_per_night * $nights;
+
+                // Apply discount if promo code exists
+                if ($reservation->promo_code) {
+                    $promoCode = \App\Models\PromoCode::where('code', $reservation->promo_code)
+                        ->available()
+                        ->first();
+                    
+                    if ($promoCode && $promoCode->canBeUsedFor($newAmount)) {
+                        $discountAmount = $promoCode->calculateDiscount($newAmount);
+                        $newAmount = max(0, $newAmount - $discountAmount);
+                        $reservation->discount_amount = $discountAmount;
+                    } else {
+                        $reservation->discount_amount = 0;
+                        $reservation->promo_code = null;
+                    }
+                }
+
+                // Calculate modification fee (if dates changed significantly)
+                $modificationFee = 0;
+                if ($oldCheckIn != $reservation->check_in_date || $oldCheckOut != $reservation->check_out_date) {
+                    $daysChanged = abs($checkIn->diffInDays(Carbon::parse($oldCheckIn)));
+                    if ($daysChanged > 7) {
+                        $modificationFee = $newAmount * 0.1; // 10% fee for changes more than 7 days
+                    }
+                }
+
+                $reservation->total_amount = $newAmount + $modificationFee;
+
+                // Log transaction
+                $this->logTransaction('modify', $reservationId, $reservation->room_id, [
+                    'old_check_in' => $oldCheckIn,
+                    'new_check_in' => $reservation->check_in_date,
+                    'old_check_out' => $oldCheckOut,
+                    'new_check_out' => $reservation->check_out_date,
+                    'old_amount' => $oldAmount,
+                    'new_amount' => $reservation->total_amount,
+                    'modification_fee' => $modificationFee,
+                ]);
+
+                $reservation->save();
+
+                return [
+                    'success' => true,
+                    'reservation' => $reservation->fresh(),
+                    'modification_fee' => $modificationFee,
+                    'message' => 'Reservation modified successfully'
+                ];
+
+            } catch (\Exception $e) {
+                Log::error('Reservation modification failed: ' . $e->getMessage());
                 
                 return [
                     'success' => false,

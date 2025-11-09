@@ -42,7 +42,6 @@
             <!-- Navigation Buttons -->
             <Button fx:id="dashboardBtn" text="Dashboard" styleClass="sidebar-button"/>
             <Button fx:id="bookingsBtn" text="Bookings" styleClass="sidebar-button"/>
-            <Button fx:id="hotelsBtn" text="Hotels" styleClass="sidebar-button"/>
             <Button fx:id="roomsBtn" text="Rooms" styleClass="sidebar-button"/>
             <Button fx:id="usersBtn" text="Customers" styleClass="sidebar-button"/>
             <Button fx:id="paymentsBtn" text="Payments" styleClass="sidebar-button"/>
@@ -93,9 +92,9 @@
                         <Label fx:id="totalRevenueLabel" text="₱0.00" styleClass="metric-value"/>
                     </VBox>
                     
-                    <!-- Active Hotels -->
+                    <!-- Total Rooms -->
                     <VBox styleClass="metric-card" alignment="CENTER" spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="1">
-                        <Label text="Active Hotels" styleClass="metric-label"/>
+                        <Label text="Total Rooms" styleClass="metric-label"/>
                         <Label fx:id="activeHotelsLabel" text="0" styleClass="metric-value"/>
                     </VBox>
                     

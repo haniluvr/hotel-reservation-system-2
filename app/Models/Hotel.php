@@ -48,6 +48,30 @@ class Hotel extends Model
     }
 
     /**
+     * Get the reviews for the hotel.
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
+     * Get the average rating for the hotel.
+     */
+    public function getAverageRating(): float
+    {
+        return $this->reviews()->approved()->avg('rating') ?? 0;
+    }
+
+    /**
+     * Get the total number of reviews for the hotel.
+     */
+    public function getTotalReviews(): int
+    {
+        return $this->reviews()->approved()->count();
+    }
+
+    /**
      * Scope a query to only include active hotels.
      */
     public function scopeActive($query)

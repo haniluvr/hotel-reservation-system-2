@@ -6,12 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Storage;
 
 class Room extends Model
 {
     protected $fillable = [
         'hotel_id',
         'room_type',
+        'slug',
         'description',
         'price_per_night',
         'quantity',
@@ -148,5 +151,96 @@ class Room extends Model
         return Attribute::make(
             get: fn () => $this->isAvailable() ? 'Available' : 'Unavailable',
         );
+    }
+
+    /**
+     * Get the folder name for room images based on slug.
+     */
+    public function getImageFolderName(): string
+    {
+        // Map room slugs to folder names
+        $slugToFolderMap = [
+            'junior-suite-balcony' => 'junior-suite-balcony',
+            'junior-suite-lagoon-access' => 'junior-suite-lagoon',
+            '1-bedroom-suite-balcony' => '1-bedroom-suite-balcony',
+            '1-bedroom-suite-lagoon-access' => '1-bedroom-suite-lagoon',
+            'signature-suite-pool-access' => 'signature-suite-pool',
+            '2-bedroom-suite-lagoon-access' => '2-bedroom-suite-lagoon',
+            '1-bedroom-villa-garden-view-with-private-pool' => '1-bedroom-villa-garden',
+            '1-bedroom-villa-resort-view-with-private-pool' => '1-bedroom-villa-resort',
+            '1-bedroom-villa-ocean-view-with-private-pool' => '1-bedroom-villa-ocean',
+            '1-bedroom-villa-ocean-view-with-balcony-and-private-pool' => '1-bedroom-villa-ocean-balcony',
+            '2-bedroom-villa-ocean-view-with-balcony-and-private-pool' => '2-bedroom-villa-ocean-balcony',
+            '3-bedroom-villa-ocean-view-with-private-pool' => '3-bedroom-villa-ocean',
+        ];
+
+        return $slugToFolderMap[$this->slug] ?? $this->slug;
+    }
+
+    /**
+     * Get room images from the storage folder.
+     */
+    public function getRoomImages(): array
+    {
+        $folderName = $this->getImageFolderName();
+        $folderPath = "accomodations/{$folderName}";
+        
+        if (!Storage::disk('public')->exists($folderPath)) {
+            return [];
+        }
+
+        $files = Storage::disk('public')->files($folderPath);
+        $images = [];
+        
+        foreach ($files as $file) {
+            $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+            if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
+                // Use Storage::url() which handles the path correctly
+                $url = Storage::disk('public')->url($file);
+                // Ensure forward slashes on all platforms
+                $images[] = str_replace('\\', '/', $url);
+            }
+        }
+        
+        // Sort images naturally (e.g., image-1.jpg, image-2.jpg, etc.)
+        natsort($images);
+        
+        return array_values($images);
+    }
+
+    /**
+     * Boot the model.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($room) {
+            if (empty($room->slug)) {
+                $room->slug = Str::slug($room->room_type);
+                
+                // Ensure uniqueness
+                $originalSlug = $room->slug;
+                $counter = 1;
+                while (static::where('slug', $room->slug)->exists()) {
+                    $room->slug = $originalSlug . '-' . $counter;
+                    $counter++;
+                }
+            }
+        });
+
+        static::updating(function ($room) {
+            if ($room->isDirty('room_type') && empty($room->slug)) {
+                $room->slug = Str::slug($room->room_type);
+                
+                // Ensure uniqueness
+                $originalSlug = $room->slug;
+                $counter = 1;
+                while (static::where('slug', $room->slug)->where('id', '!=', $room->id)->exists()) {
+                    $room->slug = $originalSlug . '-' . $counter;
+                    $counter++;
+                }
+            }
+        });
     }
 }

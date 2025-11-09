@@ -12,8 +12,7 @@
     
     <!-- Filters and Actions -->
     <HBox spacing="15" alignment="CENTER_LEFT">
-        <TextField fx:id="searchField" promptText="Search rooms..." prefWidth="250"/>
-        <ComboBox fx:id="hotelFilter" prefWidth="200" promptText="Filter by Hotel"/>
+        <TextField fx:id="searchField" promptText="Search rooms..." prefWidth="300"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Button fx:id="addBtn" text="Add Room" styleClass="btn-primary"/>
         <Button fx:id="editBtn" text="Edit" styleClass="btn-secondary"/>

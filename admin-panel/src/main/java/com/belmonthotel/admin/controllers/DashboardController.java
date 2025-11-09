@@ -37,9 +37,6 @@ public class DashboardController {
     private Button bookingsBtn;
 
     @FXML
-    private Button hotelsBtn;
-
-    @FXML
     private Button roomsBtn;
 
     @FXML
@@ -95,7 +92,6 @@ public class DashboardController {
         // Set button actions
         dashboardBtn.setOnAction(e -> showOverview());
         bookingsBtn.setOnAction(e -> loadModule("/fxml/bookings.fxml"));
-        hotelsBtn.setOnAction(e -> loadModule("/fxml/hotels.fxml"));
         roomsBtn.setOnAction(e -> loadModule("/fxml/rooms.fxml"));
         usersBtn.setOnAction(e -> loadModule("/fxml/users.fxml"));
         paymentsBtn.setOnAction(e -> loadModule("/fxml/payments.fxml"));
@@ -172,9 +168,9 @@ public class DashboardController {
                 }
             }
 
-            // Active hotels
-            String hotelsQuery = "SELECT COUNT(*) as count FROM hotels WHERE is_active = 1";
-            try (PreparedStatement stmt = conn.prepareStatement(hotelsQuery);
+            // Total rooms
+            String roomsQuery = "SELECT COUNT(*) as count FROM rooms WHERE is_active = 1";
+            try (PreparedStatement stmt = conn.prepareStatement(roomsQuery);
                  ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
                     activeHotelsLabel.setText(String.valueOf(rs.getInt("count")));
@@ -232,7 +228,6 @@ public class DashboardController {
             // Update active button based on module
             Button activeBtn = null;
             if (fxmlPath.contains("bookings")) activeBtn = bookingsBtn;
-            else if (fxmlPath.contains("hotels")) activeBtn = hotelsBtn;
             else if (fxmlPath.contains("rooms")) activeBtn = roomsBtn;
             else if (fxmlPath.contains("users")) activeBtn = usersBtn;
             else if (fxmlPath.contains("payments")) activeBtn = paymentsBtn;
@@ -262,7 +257,6 @@ public class DashboardController {
         // Remove active class from all buttons
         dashboardBtn.getStyleClass().remove("active");
         bookingsBtn.getStyleClass().remove("active");
-        hotelsBtn.getStyleClass().remove("active");
         roomsBtn.getStyleClass().remove("active");
         usersBtn.getStyleClass().remove("active");
         paymentsBtn.getStyleClass().remove("active");
