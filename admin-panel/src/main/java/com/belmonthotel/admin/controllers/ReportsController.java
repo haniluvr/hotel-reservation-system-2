@@ -46,6 +46,9 @@ public class ReportsController implements Initializable {
     private Button generatePDFBtn;
 
     @FXML
+    private Button generateCSVBtn;
+
+    @FXML
     private TextArea reportPreview;
 
     @Override
@@ -53,8 +56,19 @@ public class ReportsController implements Initializable {
         // Set report type options
         reportTypeCombo.getItems().addAll(
             "Booking Report",
-            "Revenue Report",
-            "Occupancy Report",
+            "Revenue Report (Daily)",
+            "Revenue Report (Weekly)",
+            "Revenue Report (Monthly)",
+            "Revenue by Room Type",
+            "Revenue by Payment Method",
+            "Booking Statistics",
+            "Bookings by Status",
+            "Bookings by Room Type",
+            "Booking Trends",
+            "Occupancy Report (Daily)",
+            "Occupancy Report (Weekly)",
+            "Occupancy Report (Monthly)",
+            "Occupancy by Room Type",
             "User Activity Report"
         );
         reportTypeCombo.setValue("Booking Report");
@@ -66,6 +80,9 @@ public class ReportsController implements Initializable {
         // Set button actions
         generateExcelBtn.setOnAction(e -> generateExcelReport());
         generatePDFBtn.setOnAction(e -> generatePDFReport());
+        if (generateCSVBtn != null) {
+            generateCSVBtn.setOnAction(e -> generateCSVReport());
+        }
 
         // Update preview when options change
         reportTypeCombo.setOnAction(e -> updatePreview());
@@ -92,19 +109,44 @@ public class ReportsController implements Initializable {
         preview.append("Date Range: ").append(fromDate).append(" to ").append(toDate).append("\n\n");
 
         try {
-            switch (reportType) {
-                case "Booking Report":
-                    preview.append(generateBookingReportPreview(fromDate, toDate));
-                    break;
-                case "Revenue Report":
+            if (reportType.startsWith("Revenue Report")) {
+                if (reportType.contains("Daily")) {
+                    preview.append(generateDailyRevenueReportPreview(fromDate, toDate));
+                } else if (reportType.contains("Weekly")) {
+                    preview.append(generateWeeklyRevenueReportPreview(fromDate, toDate));
+                } else if (reportType.contains("Monthly")) {
+                    preview.append(generateMonthlyRevenueReportPreview(fromDate, toDate));
+                } else {
                     preview.append(generateRevenueReportPreview(fromDate, toDate));
-                    break;
-                case "Occupancy Report":
+                }
+            } else if (reportType.equals("Revenue by Room Type")) {
+                preview.append(generateRevenueByRoomTypePreview(fromDate, toDate));
+            } else if (reportType.equals("Revenue by Payment Method")) {
+                preview.append(generateRevenueByPaymentMethodPreview(fromDate, toDate));
+            } else if (reportType.equals("Booking Statistics")) {
+                preview.append(generateBookingStatisticsPreview(fromDate, toDate));
+            } else if (reportType.equals("Bookings by Status")) {
+                preview.append(generateBookingsByStatusPreview(fromDate, toDate));
+            } else if (reportType.equals("Bookings by Room Type")) {
+                preview.append(generateBookingsByRoomTypePreview(fromDate, toDate));
+            } else if (reportType.equals("Booking Trends")) {
+                preview.append(generateBookingTrendsPreview(fromDate, toDate));
+            } else if (reportType.startsWith("Occupancy Report")) {
+                if (reportType.contains("Daily")) {
+                    preview.append(generateDailyOccupancyReportPreview(fromDate, toDate));
+                } else if (reportType.contains("Weekly")) {
+                    preview.append(generateWeeklyOccupancyReportPreview(fromDate, toDate));
+                } else if (reportType.contains("Monthly")) {
+                    preview.append(generateMonthlyOccupancyReportPreview(fromDate, toDate));
+                } else {
                     preview.append(generateOccupancyReportPreview(fromDate, toDate));
-                    break;
-                case "User Activity Report":
-                    preview.append(generateUserActivityReportPreview(fromDate, toDate));
-                    break;
+                }
+            } else if (reportType.equals("Occupancy by Room Type")) {
+                preview.append(generateOccupancyByRoomTypePreview(fromDate, toDate));
+            } else if (reportType.equals("Booking Report")) {
+                preview.append(generateBookingReportPreview(fromDate, toDate));
+            } else if (reportType.equals("User Activity Report")) {
+                preview.append(generateUserActivityReportPreview(fromDate, toDate));
             }
         } catch (SQLException e) {
             preview.append("Error generating preview: ").append(e.getMessage());
@@ -421,6 +463,228 @@ public class ReportsController implements Initializable {
             showAlert(Alert.AlertType.ERROR, "Error", "Failed to generate PDF report: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    // Additional preview methods for all report types
+    private String generateDailyRevenueReportPreview(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String query = "SELECT DATE(created_at) as date, COALESCE(SUM(total_amount), 0) as revenue, COUNT(*) as bookings " +
+                      "FROM reservations WHERE status IN ('confirmed', 'completed') " +
+                      "AND created_at BETWEEN ? AND ? GROUP BY DATE(created_at) ORDER BY date";
+        return generateDateGroupedPreview(query, fromDate, toDate, "Daily Revenue");
+    }
+
+    private String generateWeeklyRevenueReportPreview(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String query = "SELECT YEARWEEK(created_at) as week, COALESCE(SUM(total_amount), 0) as revenue, COUNT(*) as bookings " +
+                      "FROM reservations WHERE status IN ('confirmed', 'completed') " +
+                      "AND created_at BETWEEN ? AND ? GROUP BY YEARWEEK(created_at) ORDER BY week";
+        return generateGroupedPreview(query, fromDate, toDate, "Weekly Revenue");
+    }
+
+    private String generateMonthlyRevenueReportPreview(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String query = "SELECT DATE_FORMAT(created_at, '%Y-%m') as month, COALESCE(SUM(total_amount), 0) as revenue, COUNT(*) as bookings " +
+                      "FROM reservations WHERE status IN ('confirmed', 'completed') " +
+                      "AND created_at BETWEEN ? AND ? GROUP BY DATE_FORMAT(created_at, '%Y-%m') ORDER BY month";
+        return generateGroupedPreview(query, fromDate, toDate, "Monthly Revenue");
+    }
+
+    private String generateRevenueByRoomTypePreview(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String query = "SELECT rm.room_type, COALESCE(SUM(r.total_amount), 0) as revenue, COUNT(*) as bookings " +
+                      "FROM reservations r JOIN rooms rm ON r.room_id = rm.id " +
+                      "WHERE r.status IN ('confirmed', 'completed') AND r.created_at BETWEEN ? AND ? " +
+                      "GROUP BY rm.room_type ORDER BY revenue DESC";
+        return generateGroupedPreview(query, fromDate, toDate, "Revenue by Room Type");
+    }
+
+    private String generateRevenueByPaymentMethodPreview(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String query = "SELECT COALESCE(p.payment_method, 'N/A') as method, COALESCE(SUM(p.amount), 0) as revenue, COUNT(*) as payments " +
+                      "FROM payments p JOIN reservations r ON p.reservation_id = r.id " +
+                      "WHERE p.status = 'paid' AND p.created_at BETWEEN ? AND ? " +
+                      "GROUP BY p.payment_method ORDER BY revenue DESC";
+        return generateGroupedPreview(query, fromDate, toDate, "Revenue by Payment Method");
+    }
+
+    private String generateBookingStatisticsPreview(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String query = "SELECT COUNT(*) as total, " +
+                      "SUM(CASE WHEN status = 'confirmed' THEN 1 ELSE 0 END) as confirmed, " +
+                      "SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled, " +
+                      "AVG(total_amount) as avg_amount, " +
+                      "AVG(DATEDIFF(check_out_date, check_in_date)) as avg_nights " +
+                      "FROM reservations WHERE created_at BETWEEN ? AND ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setDate(1, java.sql.Date.valueOf(fromDate));
+            stmt.setDate(2, java.sql.Date.valueOf(toDate));
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                int total = rs.getInt("total");
+                int cancelled = rs.getInt("cancelled");
+                double cancellationRate = total > 0 ? (cancelled * 100.0 / total) : 0;
+                return String.format("Total Bookings: %d\nConfirmed: %d\nCancelled: %d\nCancellation Rate: %.2f%%\n" +
+                                   "Average Amount: ₱%.2f\nAverage Nights: %.1f",
+                    total, rs.getInt("confirmed"), cancelled, cancellationRate,
+                    rs.getDouble("avg_amount"), rs.getDouble("avg_nights"));
+            }
+        }
+        return "No data available";
+    }
+
+    private String generateBookingsByStatusPreview(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String query = "SELECT status, COUNT(*) as count FROM reservations " +
+                      "WHERE created_at BETWEEN ? AND ? GROUP BY status ORDER BY count DESC";
+        return generateGroupedPreview(query, fromDate, toDate, "Bookings by Status");
+    }
+
+    private String generateBookingsByRoomTypePreview(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String query = "SELECT rm.room_type, COUNT(*) as count FROM reservations r " +
+                      "JOIN rooms rm ON r.room_id = rm.id " +
+                      "WHERE r.created_at BETWEEN ? AND ? GROUP BY rm.room_type ORDER BY count DESC";
+        return generateGroupedPreview(query, fromDate, toDate, "Bookings by Room Type");
+    }
+
+    private String generateBookingTrendsPreview(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String query = "SELECT DATE(created_at) as date, COUNT(*) as bookings " +
+                      "FROM reservations WHERE created_at BETWEEN ? AND ? " +
+                      "GROUP BY DATE(created_at) ORDER BY date";
+        return generateDateGroupedPreview(query, fromDate, toDate, "Booking Trends");
+    }
+
+    private String generateDailyOccupancyReportPreview(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String query = "SELECT DATE(check_in_date) as date, " +
+                      "COUNT(DISTINCT r.room_id) as rooms_booked, " +
+                      "COUNT(*) as bookings, " +
+                      "ROUND(COUNT(DISTINCT r.room_id) * 100.0 / (SELECT COUNT(*) FROM rooms WHERE is_active = 1), 2) as occupancy_rate " +
+                      "FROM reservations r WHERE r.status IN ('pending', 'confirmed', 'completed') " +
+                      "AND r.check_in_date BETWEEN ? AND ? GROUP BY DATE(check_in_date) ORDER BY date";
+        return generateDateGroupedPreview(query, fromDate, toDate, "Daily Occupancy");
+    }
+
+    private String generateWeeklyOccupancyReportPreview(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String query = "SELECT YEARWEEK(check_in_date) as week, " +
+                      "COUNT(DISTINCT r.room_id) as rooms_booked, " +
+                      "COUNT(*) as bookings " +
+                      "FROM reservations r WHERE r.status IN ('pending', 'confirmed', 'completed') " +
+                      "AND r.check_in_date BETWEEN ? AND ? GROUP BY YEARWEEK(check_in_date) ORDER BY week";
+        return generateGroupedPreview(query, fromDate, toDate, "Weekly Occupancy");
+    }
+
+    private String generateMonthlyOccupancyReportPreview(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String query = "SELECT DATE_FORMAT(check_in_date, '%Y-%m') as month, " +
+                      "COUNT(DISTINCT r.room_id) as rooms_booked, " +
+                      "COUNT(*) as bookings " +
+                      "FROM reservations r WHERE r.status IN ('pending', 'confirmed', 'completed') " +
+                      "AND r.check_in_date BETWEEN ? AND ? GROUP BY DATE_FORMAT(check_in_date, '%Y-%m') ORDER BY month";
+        return generateGroupedPreview(query, fromDate, toDate, "Monthly Occupancy");
+    }
+
+    private String generateOccupancyByRoomTypePreview(LocalDate fromDate, LocalDate toDate) throws SQLException {
+        String query = "SELECT rm.room_type, COUNT(DISTINCT r.room_id) as rooms_booked, COUNT(*) as bookings " +
+                      "FROM reservations r JOIN rooms rm ON r.room_id = rm.id " +
+                      "WHERE r.status IN ('pending', 'confirmed', 'completed') AND r.check_in_date BETWEEN ? AND ? " +
+                      "GROUP BY rm.room_type ORDER BY rooms_booked DESC";
+        return generateGroupedPreview(query, fromDate, toDate, "Occupancy by Room Type");
+    }
+
+    private String generateDateGroupedPreview(String query, LocalDate fromDate, LocalDate toDate, String title) throws SQLException {
+        StringBuilder result = new StringBuilder(title + ":\n");
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setDate(1, java.sql.Date.valueOf(fromDate));
+            stmt.setDate(2, java.sql.Date.valueOf(toDate));
+            ResultSet rs = stmt.executeQuery();
+            int count = 0;
+            while (rs.next() && count < 10) {
+                result.append(String.format("%s: ₱%.2f (%d bookings)\n",
+                    rs.getString(1), rs.getDouble(2), rs.getInt(3)));
+                count++;
+            }
+            if (count == 0) result.append("No data available");
+        }
+        return result.toString();
+    }
+
+    private String generateGroupedPreview(String query, LocalDate fromDate, LocalDate toDate, String title) throws SQLException {
+        StringBuilder result = new StringBuilder(title + ":\n");
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setDate(1, java.sql.Date.valueOf(fromDate));
+            stmt.setDate(2, java.sql.Date.valueOf(toDate));
+            ResultSet rs = stmt.executeQuery();
+            int count = 0;
+            while (rs.next() && count < 10) {
+                if (rs.getMetaData().getColumnCount() >= 3) {
+                    result.append(String.format("%s: ₱%.2f (%d)\n",
+                        rs.getString(1), rs.getDouble(2), rs.getInt(3)));
+                } else {
+                    result.append(String.format("%s: %d\n", rs.getString(1), rs.getInt(2)));
+                }
+                count++;
+            }
+            if (count == 0) result.append("No data available");
+        }
+        return result.toString();
+    }
+
+    /**
+     * Generate CSV report.
+     */
+    private void generateCSVReport() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Save CSV Report");
+        fileChooser.getExtensionFilters().add(
+            new FileChooser.ExtensionFilter("CSV Files", "*.csv")
+        );
+        fileChooser.setInitialFileName("report_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")) + ".csv");
+
+        File file = fileChooser.showSaveDialog(null);
+        if (file == null) {
+            return;
+        }
+
+        try (java.io.PrintWriter writer = new java.io.PrintWriter(file, "UTF-8")) {
+            String reportType = reportTypeCombo.getValue();
+            LocalDate fromDate = dateFromPicker.getValue();
+            LocalDate toDate = dateToPicker.getValue();
+
+            if (reportType != null && fromDate != null && toDate != null) {
+                generateCSVData(writer, reportType, fromDate, toDate);
+            }
+
+            showAlert(Alert.AlertType.INFORMATION, "Success", "CSV report generated successfully!");
+        } catch (IOException | SQLException e) {
+            showAlert(Alert.AlertType.ERROR, "Error", "Failed to generate CSV report: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Generate CSV data based on report type.
+     */
+    private void generateCSVData(java.io.PrintWriter writer, String reportType, LocalDate fromDate, LocalDate toDate) throws SQLException {
+        // Write header
+        writer.println("Report Type: " + reportType);
+        writer.println("Date Range: " + fromDate + " to " + toDate);
+        writer.println();
+
+        // Generate data based on report type (similar to Excel generation)
+        if (reportType.equals("Booking Report")) {
+            writer.println("ID,Reservation Number,Guest Name,Hotel,Check-in,Check-out,Status,Amount");
+            String query = "SELECT r.id, r.reservation_number, u.name, h.name, r.check_in_date, r.check_out_date, r.status, r.total_amount " +
+                          "FROM reservations r JOIN users u ON r.user_id = u.id " +
+                          "JOIN rooms rm ON r.room_id = rm.id JOIN hotels h ON rm.hotel_id = h.id " +
+                          "WHERE r.check_in_date BETWEEN ? AND ? ORDER BY r.created_at DESC";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(query)) {
+                stmt.setDate(1, java.sql.Date.valueOf(fromDate));
+                stmt.setDate(2, java.sql.Date.valueOf(toDate));
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    writer.printf("%d,%s,%s,%s,%s,%s,%s,%.2f%n",
+                        rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4),
+                        rs.getDate(5), rs.getDate(6), rs.getString(7), rs.getDouble(8));
+                }
+            }
+        }
+        // Add other report types as needed
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {

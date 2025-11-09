@@ -11,15 +11,45 @@
     <Label text="Bookings Management" styleClass="label-title"/>
     
     <!-- Filters and Search -->
-    <HBox spacing="15" alignment="CENTER_LEFT">
-        <TextField fx:id="searchField" promptText="Search by reservation number, guest name, or hotel..." 
-                   prefWidth="300"/>
-        <ComboBox fx:id="statusFilter" prefWidth="150" promptText="Status"/>
-        <DatePicker fx:id="dateFromFilter" promptText="From Date"/>
-        <DatePicker fx:id="dateToFilter" promptText="To Date"/>
-        <Region HBox.hgrow="ALWAYS"/>
-        <Button fx:id="refreshBtn" text="Refresh" styleClass="btn-primary"/>
-    </HBox>
+    <VBox spacing="10">
+        <HBox spacing="15" alignment="CENTER_LEFT">
+            <TextField fx:id="searchField" promptText="Search by reservation number, guest name, or hotel..." 
+                       prefWidth="250"/>
+            <TextField fx:id="emailSearchField" promptText="Search by email..." 
+                       prefWidth="200"/>
+            <ComboBox fx:id="statusFilter" prefWidth="130" promptText="Status"/>
+            <ComboBox fx:id="roomTypeFilter" prefWidth="150" promptText="Room Type"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button fx:id="refreshBtn" text="Refresh" styleClass="btn-primary"/>
+        </HBox>
+        <HBox spacing="15" alignment="CENTER_LEFT">
+            <DatePicker fx:id="dateFromFilter" promptText="From Date"/>
+            <DatePicker fx:id="dateToFilter" promptText="To Date"/>
+            <Label text="Amount Range:"/>
+            <TextField fx:id="amountMinField" promptText="Min" prefWidth="100"/>
+            <Label text="-"/>
+            <TextField fx:id="amountMaxField" promptText="Max" prefWidth="100"/>
+            <Button fx:id="clearFiltersBtn" text="Clear Filters" styleClass="btn-secondary"/>
+        </HBox>
+    </VBox>
+    
+    <!-- Sort Options Panel -->
+    <TitledPane text="Sort Algorithms (Java Implementation)" expanded="true">
+        <VBox spacing="10" style="-fx-padding: 15px;">
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Algorithm:" style="-fx-font-weight: bold;"/>
+                <ComboBox fx:id="sortAlgorithmCombo" prefWidth="150" promptText="Select Algorithm"/>
+                <Label text="Sort By:" style="-fx-font-weight: bold;"/>
+                <ComboBox fx:id="sortFieldCombo" prefWidth="150" promptText="Select Field"/>
+                <Button fx:id="sortBtn" text="Sort" styleClass="btn-primary"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="sortMetricsLabel" text="No sort performed" 
+                       style="-fx-font-size: 11px; -fx-text-fill: #666;"/>
+            </HBox>
+            <Label text="Note: This uses Java sort algorithms (Quick/Merge/Heap Sort) separate from SQL ORDER BY" 
+                   style="-fx-font-size: 10px; -fx-text-fill: #999; -fx-font-style: italic;"/>
+        </VBox>
+    </TitledPane>
     
     <!-- Actions -->
     <HBox spacing="10">

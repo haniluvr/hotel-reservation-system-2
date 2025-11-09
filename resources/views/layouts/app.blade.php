@@ -73,45 +73,36 @@
 
         // Global function to open auth modal
         window.openAuthModal = function(type = 'login') {
-            console.log('openAuthModal called with type:', type);
             // Store current URL before opening modal
             if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
                 sessionStorage.setItem('auth_return_url', window.location.href);
             }
             // Try multiple methods with retries
             function tryOpen() {
-                console.log('Trying to open modal...');
                 // Method 1: Direct function call
                 if (window.authModalOpen && typeof window.authModalOpen === 'function') {
-                    console.log('Method 1: Using authModalOpen function');
                     window.authModalOpen(type);
                     return true;
                 }
                 
                 // Method 2: Alpine direct access
                 const modalElement = document.getElementById('auth-modal');
-                console.log('Modal element found:', modalElement);
                 if (modalElement) {
-                    console.log('Modal has data-modal-ready:', modalElement.hasAttribute('data-modal-ready'));
-                    console.log('Alpine available:', !!window.Alpine);
                     // Check if Alpine is ready
                     if (window.Alpine && modalElement.hasAttribute('data-modal-ready')) {
                         try {
                             const alpineData = window.Alpine.$data(modalElement);
-                            console.log('Alpine data:', alpineData);
                             if (alpineData && typeof alpineData.openModal === 'function') {
-                                console.log('Method 2: Using Alpine direct access');
                                 alpineData.openModal(type);
                                 return true;
                             }
                         } catch (e) {
-                            console.log('Alpine access error:', e);
+                            // Silently handle errors
                         }
                     }
                 }
                 
                 // Method 3: Dispatch event (most reliable fallback)
-                console.log('Method 3: Dispatching event');
                 const event = new CustomEvent('openAuthModal', { detail: { type } });
                 window.dispatchEvent(event);
                 return false;
@@ -121,10 +112,8 @@
             if (!tryOpen()) {
                 // If that didn't work, wait a bit and try again
                 setTimeout(() => {
-                    console.log('Retrying after 100ms...');
                     if (!tryOpen()) {
                         // Last resort: wait for Alpine
-                        console.log('Waiting for Alpine...');
                         waitForAlpine(() => {
                             tryOpen();
                         });
@@ -152,6 +141,14 @@
                 var target = e.target;
                 if (!target) return;
                 
+                // IMPORTANT: Don't intercept clicks inside the auth modal
+                // Check if the click is inside the auth modal
+                var authModal = document.getElementById('auth-modal');
+                if (authModal && authModal.contains(target)) {
+                    // This is a click inside the modal, let it proceed normally
+                    return;
+                }
+                
                 // Check multiple ways to identify the Sign In button
                 var isSignInButton = false;
                 var button = null;
@@ -167,11 +164,14 @@
                     button = target.closest('[data-sign-in]');
                 }
                 // Method 3: Check if target or parent button contains "Sign In" text
+                // BUT only if it's NOT inside a form (to avoid catching form submit buttons)
                 else {
                     var parentButton = target.closest && target.closest('button');
                     if (parentButton && parentButton.textContent && parentButton.textContent.includes('Sign In')) {
+                        // Make sure it's not inside a form (form submit buttons should work normally)
+                        var isInForm = parentButton.closest && parentButton.closest('form');
                         // Make sure it's not the mobile menu button
-                        if (!parentButton.textContent.includes('Create Account')) {
+                        if (!isInForm && !parentButton.textContent.includes('Create Account')) {
                             isSignInButton = true;
                             button = parentButton;
                         }
@@ -181,14 +181,11 @@
                 if (isSignInButton && button) {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Sign In clicked (vanilla JS handler)', button);
                     
                     // Try to open modal
                     if (window.openAuthModal) {
-                        console.log('Calling window.openAuthModal');
                         window.openAuthModal('login');
                     } else {
-                        console.log('Dispatching openAuthModal event');
                         var event = new CustomEvent('openAuthModal', { detail: { type: 'login' } });
                         window.dispatchEvent(event);
                     }
@@ -198,11 +195,9 @@
 
         // Global function to open search modal
         window.openSearchModal = function() {
-            console.log('openSearchModal called');
             function tryOpen() {
                 // Method 1: Direct function call
                 if (window.searchModalOpen && typeof window.searchModalOpen === 'function') {
-                    console.log('Method 1: Using searchModalOpen function');
                     window.searchModalOpen();
                     return true;
                 }
@@ -213,17 +208,15 @@
                     try {
                         const alpineData = window.Alpine.$data(modalElement);
                         if (alpineData && typeof alpineData.openModal === 'function') {
-                            console.log('Method 2: Using Alpine direct access');
                             alpineData.openModal();
                             return true;
                         }
                     } catch (e) {
-                        console.log('Alpine access error:', e);
+                        // Silently handle errors
                     }
                 }
                 
                 // Method 3: Dispatch event
-                console.log('Method 3: Dispatching event');
                 const event = new CustomEvent('openSearchModal');
                 window.dispatchEvent(event);
                 return false;
@@ -281,7 +274,6 @@
                 if (isSearchButton && button) {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Search button clicked (vanilla JS handler)', button);
                     
                     if (window.openSearchModal) {
                         window.openSearchModal();
@@ -345,7 +337,7 @@
                     const params = new URLSearchParams(formData);
                     window.location.href = '{{ route("booking.create") }}?' + params.toString();
                 } catch (e) {
-                    console.error('Error parsing pending reservation:', e);
+                    // Silently handle parsing errors
                     sessionStorage.removeItem('pendingReservation');
                 }
             }

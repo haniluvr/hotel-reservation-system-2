@@ -17,8 +17,28 @@
         <Button fx:id="addBtn" text="Add Room" styleClass="btn-primary"/>
         <Button fx:id="editBtn" text="Edit" styleClass="btn-secondary"/>
         <Button fx:id="deleteBtn" text="Delete" styleClass="btn-danger"/>
+        <Button fx:id="viewAvailabilityBtn" text="View Availability" styleClass="btn-secondary"/>
+        <Button fx:id="viewDependenciesBtn" text="Room Dependencies (Graph)" styleClass="btn-secondary"/>
         <Button fx:id="refreshBtn" text="Refresh" styleClass="btn-primary"/>
     </HBox>
+    
+    <!-- Sort Options Panel -->
+    <TitledPane text="Sort Algorithms (Java Implementation - Merge Sort)" expanded="true">
+        <VBox spacing="10" style="-fx-padding: 15px;">
+            <HBox spacing="10" alignment="CENTER_LEFT">
+                <Label text="Algorithm:" style="-fx-font-weight: bold;"/>
+                <ComboBox fx:id="sortAlgorithmCombo" prefWidth="150" promptText="Select Algorithm"/>
+                <Label text="Sort By:" style="-fx-font-weight: bold;"/>
+                <ComboBox fx:id="sortFieldCombo" prefWidth="150" promptText="Select Field"/>
+                <Button fx:id="sortBtn" text="Sort" styleClass="btn-primary"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <Label fx:id="sortMetricsLabel" text="No sort performed" 
+                       style="-fx-font-size: 11px; -fx-text-fill: #666;"/>
+            </HBox>
+            <Label text="Note: This uses Java sort algorithms (Quick/Merge/Heap Sort) separate from SQL ORDER BY" 
+                   style="-fx-font-size: 10px; -fx-text-fill: #999; -fx-font-style: italic;"/>
+        </VBox>
+    </TitledPane>
     
     <!-- Rooms Table -->
     <TableView fx:id="roomsTable" styleClass="table-view" prefHeight="500">

@@ -14,6 +14,10 @@ public class Room {
     private final IntegerProperty quantity = new SimpleIntegerProperty();
     private final IntegerProperty availableQuantity = new SimpleIntegerProperty();
     private final IntegerProperty maxGuests = new SimpleIntegerProperty();
+    private final IntegerProperty maxAdults = new SimpleIntegerProperty();
+    private final IntegerProperty maxChildren = new SimpleIntegerProperty();
+    private final StringProperty description = new SimpleStringProperty();
+    private final StringProperty amenities = new SimpleStringProperty();
     private final StringProperty status = new SimpleStringProperty();
 
     // Getters and Setters
@@ -123,6 +127,54 @@ public class Room {
 
     public StringProperty statusProperty() {
         return status;
+    }
+
+    public int getMaxAdults() {
+        return maxAdults.get();
+    }
+
+    public void setMaxAdults(int maxAdults) {
+        this.maxAdults.set(maxAdults);
+    }
+
+    public IntegerProperty maxAdultsProperty() {
+        return maxAdults;
+    }
+
+    public int getMaxChildren() {
+        return maxChildren.get();
+    }
+
+    public void setMaxChildren(int maxChildren) {
+        this.maxChildren.set(maxChildren);
+    }
+
+    public IntegerProperty maxChildrenProperty() {
+        return maxChildren;
+    }
+
+    public String getDescription() {
+        return description.get();
+    }
+
+    public void setDescription(String description) {
+        this.description.set(description);
+    }
+
+    public StringProperty descriptionProperty() {
+        return description;
+    }
+
+    public String getAmenities() {
+        return amenities.get();
+    }
+
+    public void setAmenities(String amenities) {
+        this.amenities.set(amenities);
+    }
+
+    public StringProperty amenitiesProperty() {
+        return amenities;
     }
 }
 

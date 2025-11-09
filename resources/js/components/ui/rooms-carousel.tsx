@@ -10,6 +10,8 @@ interface RoomData {
   description?: string;
   price_per_night: number;
   max_guests: number;
+  max_adults?: number;
+  max_children?: number;
   size?: string;
   available_quantity: number;
   images?: string[];
@@ -196,21 +198,21 @@ const RoomsCarousel = ({ rooms, hotelId }: RoomsCarouselProps) => {
                   React.createElement("div", {
                     className: "absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent",
                   }),
-                  // Room Type Badge
+                  // Availability Badge (top-right)
                   React.createElement(
                     "div",
                     { className: "absolute top-4 right-4" },
-                    React.createElement(
+                    room.available_quantity > 0
+                      ? React.createElement(
+                          "span",
+                          { className: "px-3 py-1 bg-green-500 text-white text-xs font-semibold rounded-full" },
+                          `${room.available_quantity} Available`
+                        )
+                      : React.createElement(
                       "span",
-                      { className: "bg-white/95 backdrop-blur-sm text-primary-green px-3 py-1 rounded-full text-sm font-semibold" },
-                      room.room_type
-                    )
-                  ),
-                  // Availability Badge
-                  React.createElement(
-                    "div",
-                    { className: "absolute bottom-4 left-4 text-white" },
-                    React.createElement("p", { className: "text-sm font-medium" }, `${room.available_quantity} Available`)
+                          { className: "px-3 py-1 bg-red-500 text-white text-xs font-semibold rounded-full" },
+                          "Sold Out"
+                        )
                   )
                 ),
                 // Room Info
@@ -229,16 +231,16 @@ const RoomsCarousel = ({ rooms, hotelId }: RoomsCarouselProps) => {
                       ? room.description.substring(0, 120) + (room.description.length > 120 ? "..." : "")
                       : "Luxurious accommodation with modern amenities"
                   ),
-                  // Room Details
+                  // Room Details (Guests, Adults, Children, Size)
                   React.createElement(
                     "div",
-                    { className: "flex items-center space-x-4 mb-4 text-sm text-gray-300" },
+                    { className: "flex flex-wrap gap-3 mb-4 text-sm text-gray-400" },
                     React.createElement(
                       "div",
-                      { className: "flex items-center space-x-1" },
+                      { className: "flex items-center" },
                       React.createElement(
                         "svg",
-                        { className: "w-4 h-4", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24" },
+                        { className: "w-4 h-4 mr-1", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24" },
                         React.createElement("path", {
                           strokeLinecap: "round",
                           strokeLinejoin: "round",
@@ -248,44 +250,52 @@ const RoomsCarousel = ({ rooms, hotelId }: RoomsCarouselProps) => {
                       ),
                       React.createElement("span", null, `${room.max_guests} Guests`)
                     ),
+                    room.max_adults &&
+                      React.createElement(
+                        React.Fragment,
+                        null,
+                        React.createElement("span", null, "•"),
+                        React.createElement("span", { className: "ml-1" }, `${room.max_adults} Adults`)
+                      ),
+                    room.max_children !== undefined && room.max_children > 0 &&
+                      React.createElement(
+                        React.Fragment,
+                        null,
+                        React.createElement("span", null, "•"),
+                        React.createElement("span", { className: "ml-1" }, `${room.max_children} Children`)
+                    ),
                     room.size &&
                       React.createElement(
-                        "div",
-                        { className: "flex items-center space-x-1" },
-                        React.createElement(
-                          "svg",
-                          { className: "w-4 h-4", fill: "none", stroke: "currentColor", viewBox: "0 0 24 24" },
-                          React.createElement("path", {
-                            strokeLinecap: "round",
-                            strokeLinejoin: "round",
-                            strokeWidth: "2",
-                            d: "M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4",
-                          })
-                        ),
-                        React.createElement("span", null, room.size)
+                        React.Fragment,
+                        null,
+                        React.createElement("span", null, "•"),
+                        React.createElement("span", { className: "ml-1" }, room.size)
                       )
                   ),
-                  // Amenities
+                  // Amenities Tags
+                  room.amenities && room.amenities.length > 0 &&
+                    React.createElement(
+                      "div",
+                      { className: "mb-4" },
                   React.createElement(
                     "div",
-                    { className: "flex flex-wrap gap-2 mb-4" },
-                    room.amenities &&
+                        { className: "flex flex-wrap gap-2" },
                       room.amenities.slice(0, 3).map((amenity, idx) =>
                         React.createElement(
                           "span",
                           {
                             key: idx,
-                            className: "bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-xs font-medium border border-gray-700",
+                              className: "px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded border border-gray-700",
                           },
                           amenity
                         )
                       ),
-                    room.amenities &&
                       room.amenities.length > 3 &&
                       React.createElement(
                         "span",
-                        { className: "bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-xs font-medium border border-gray-700" },
+                            { className: "px-2 py-1 bg-gray-800 text-gray-300 text-xs rounded border border-gray-700" },
                         `+${room.amenities.length - 3} more`
+                          )
                       )
                   ),
                   // Price and CTA
@@ -298,7 +308,7 @@ const RoomsCarousel = ({ rooms, hotelId }: RoomsCarouselProps) => {
                       React.createElement(
                         "div",
                         { className: "text-2xl font-bold text-primary-green" },
-                        `₱${room.price_per_night.toLocaleString()}`
+                        `₱${Number(room.price_per_night || room.price || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                       ),
                       React.createElement("div", { className: "text-xs text-gray-400" }, "per night")
                     ),

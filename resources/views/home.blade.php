@@ -214,10 +214,6 @@
                 </div>
             </div>
 
-        <!-- Debug: Show raw data -->
-        <script>
-            console.log('Popular Destinations Data:', @json($popularDestinations));
-        </script>
     </div>
 </section>
 

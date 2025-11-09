@@ -195,6 +195,40 @@ class BookingController extends Controller
             ->with(['room.hotel', 'payment'])
             ->findOrFail($id);
 
+        // Check and update payment status from Xendit if needed
+        if ($booking->payment && 
+            $booking->payment->payment_method === 'xendit' && 
+            $booking->payment->status === 'pending') {
+            try {
+                $xenditService = app(\App\Services\XenditPaymentService::class);
+                $invoiceResult = $xenditService->getInvoice($booking->payment->xendit_invoice_id);
+                
+                if ($invoiceResult['success'] && isset($invoiceResult['invoice']['status']) && $invoiceResult['invoice']['status'] === 'PAID') {
+                    $invoice = $invoiceResult['invoice'];
+                    
+                    // Update payment status
+                    $booking->payment->update([
+                        'status' => 'paid',
+                        'paid_at' => now(),
+                        'payment_details' => array_merge($booking->payment->payment_details ?? [], $invoice),
+                    ]);
+
+                    // Update reservation status
+                    if ($booking->status === 'pending') {
+                        $booking->update([
+                            'status' => 'confirmed',
+                            'confirmed_at' => now(),
+                        ]);
+                    }
+                    
+                    // Refresh relationships
+                    $booking->load('payment');
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to check payment status from Xendit: ' . $e->getMessage());
+            }
+        }
+
         return view('booking.show', compact('booking'));
     }
 

@@ -68,7 +68,6 @@ const NavbarComponent = ({ logoText = "Belmont Hotel", logoSrc, user }: NavbarCo
               onClick: (e: any) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Search button clicked - NavbarButton');
                 if (typeof window !== 'undefined') {
                   // Small delay to ensure Alpine is ready
                   setTimeout(() => {
@@ -116,15 +115,12 @@ const NavbarComponent = ({ logoText = "Belmont Hotel", logoSrc, user }: NavbarCo
                   onClick: (e: any) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    console.log('Sign In button clicked - NavbarButton');
                     if (typeof window !== 'undefined') {
                       // Try the global function
                       if ((window as any).openAuthModal) {
-                        console.log('Calling openAuthModal');
                         (window as any).openAuthModal('login');
                       } else {
                         // Fallback: dispatch event directly
-                        console.log('Dispatching event directly');
                         const event = new CustomEvent('openAuthModal', { detail: { type: 'login' } });
                         window.dispatchEvent(event);
                       }

@@ -1,7 +1,9 @@
 package com.belmonthotel.admin.controllers;
 
+import com.belmonthotel.admin.controllers.dialogs.BookingDetailsDialog;
 import com.belmonthotel.admin.models.Booking;
 import com.belmonthotel.admin.utils.DatabaseConnection;
+import com.belmonthotel.admin.utils.SortAlgorithms;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -16,6 +18,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.ResourceBundle;
 
 /**
@@ -56,13 +61,28 @@ public class BookingsController implements Initializable {
     private TextField searchField;
 
     @FXML
+    private TextField emailSearchField;
+
+    @FXML
     private ComboBox<String> statusFilter;
+
+    @FXML
+    private ComboBox<String> roomTypeFilter;
 
     @FXML
     private DatePicker dateFromFilter;
 
     @FXML
     private DatePicker dateToFilter;
+
+    @FXML
+    private TextField amountMinField;
+
+    @FXML
+    private TextField amountMaxField;
+
+    @FXML
+    private Button clearFiltersBtn;
 
     @FXML
     private Button refreshBtn;
@@ -75,6 +95,18 @@ public class BookingsController implements Initializable {
 
     @FXML
     private Button viewDetailsBtn;
+
+    @FXML
+    private ComboBox<String> sortAlgorithmCombo;
+
+    @FXML
+    private ComboBox<String> sortFieldCombo;
+
+    @FXML
+    private Button sortBtn;
+
+    @FXML
+    private Label sortMetricsLabel;
 
     private ObservableList<Booking> bookingsList;
     private ObservableList<Booking> filteredList;
@@ -99,20 +131,66 @@ public class BookingsController implements Initializable {
         statusFilter.getItems().addAll("All", "Pending", "Confirmed", "Cancelled", "Completed", "No Show");
         statusFilter.setValue("All");
 
+        // Load room types for filter
+        loadRoomTypes();
+
+        // Initialize sort algorithm options
+        if (sortAlgorithmCombo != null) {
+            sortAlgorithmCombo.getItems().addAll("Quick Sort", "Merge Sort", "Heap Sort");
+            sortAlgorithmCombo.setValue("Quick Sort");
+        }
+        
+        // Initialize sort field options
+        if (sortFieldCombo != null) {
+            sortFieldCombo.getItems().addAll("Date (Check-in)", "Amount", "Guest Name", "Status");
+            sortFieldCombo.setValue("Date (Check-in)");
+        }
+
         // Set button actions
         refreshBtn.setOnAction(e -> loadBookings());
         confirmBtn.setOnAction(e -> confirmSelectedBooking());
         cancelBtn.setOnAction(e -> cancelSelectedBooking());
         viewDetailsBtn.setOnAction(e -> viewBookingDetails());
+        clearFiltersBtn.setOnAction(e -> clearFilters());
+        if (sortBtn != null) {
+            sortBtn.setOnAction(e -> performSort());
+        }
 
         // Set filter actions
         searchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        emailSearchField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         statusFilter.setOnAction(e -> applyFilters());
+        roomTypeFilter.setOnAction(e -> applyFilters());
         dateFromFilter.valueProperty().addListener((obs, oldVal, newVal) -> applyFilters());
         dateToFilter.valueProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        amountMinField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
+        amountMaxField.textProperty().addListener((obs, oldVal, newVal) -> applyFilters());
 
         // Load initial data
         loadBookings();
+    }
+
+    /**
+     * Load room types for filter dropdown.
+     */
+    private void loadRoomTypes() {
+        roomTypeFilter.getItems().clear();
+        roomTypeFilter.getItems().add("All");
+        
+        String query = "SELECT DISTINCT room_type FROM rooms ORDER BY room_type";
+        
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            
+            while (rs.next()) {
+                roomTypeFilter.getItems().add(rs.getString("room_type"));
+            }
+            
+            roomTypeFilter.setValue("All");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -167,9 +245,28 @@ public class BookingsController implements Initializable {
         filteredList.clear();
         
         String searchText = searchField.getText().toLowerCase();
+        String emailText = emailSearchField.getText().toLowerCase();
         String status = statusFilter.getValue();
+        String roomType = roomTypeFilter.getValue();
         LocalDate fromDate = dateFromFilter.getValue();
         LocalDate toDate = dateToFilter.getValue();
+        
+        double minAmount = -1;
+        double maxAmount = -1;
+        try {
+            if (!amountMinField.getText().isEmpty()) {
+                minAmount = Double.parseDouble(amountMinField.getText());
+            }
+        } catch (NumberFormatException e) {
+            // Invalid number, ignore
+        }
+        try {
+            if (!amountMaxField.getText().isEmpty()) {
+                maxAmount = Double.parseDouble(amountMaxField.getText());
+            }
+        } catch (NumberFormatException e) {
+            // Invalid number, ignore
+        }
 
         for (Booking booking : bookingsList) {
             // Search filter
@@ -181,9 +278,23 @@ public class BookingsController implements Initializable {
                 }
             }
 
+            // Email search filter
+            if (!emailText.isEmpty()) {
+                if (!booking.getGuestEmail().toLowerCase().contains(emailText)) {
+                    continue;
+                }
+            }
+
             // Status filter
             if (status != null && !status.equals("All")) {
                 if (!booking.getStatus().equalsIgnoreCase(status)) {
+                    continue;
+                }
+            }
+
+            // Room type filter
+            if (roomType != null && !roomType.equals("All")) {
+                if (!booking.getRoomType().equalsIgnoreCase(roomType)) {
                     continue;
                 }
             }
@@ -203,10 +314,116 @@ public class BookingsController implements Initializable {
                 }
             }
 
+            // Amount range filter
+            if (minAmount >= 0 || maxAmount >= 0) {
+                try {
+                    double amount = Double.parseDouble(booking.getTotalAmount().replace("₱", "").replace(",", ""));
+                    if (minAmount >= 0 && amount < minAmount) {
+                        continue;
+                    }
+                    if (maxAmount >= 0 && amount > maxAmount) {
+                        continue;
+                    }
+                } catch (NumberFormatException e) {
+                    // If we can't parse the amount, skip this filter
+                }
+            }
+
             filteredList.add(booking);
         }
 
         bookingsTable.setItems(filteredList);
+    }
+    
+    /**
+     * Clear all filters.
+     */
+    private void clearFilters() {
+        searchField.clear();
+        emailSearchField.clear();
+        statusFilter.setValue("All");
+        roomTypeFilter.setValue("All");
+        dateFromFilter.setValue(null);
+        dateToFilter.setValue(null);
+        amountMinField.clear();
+        amountMaxField.clear();
+        applyFilters();
+    }
+    
+    /**
+     * Perform sorting using selected algorithm (Quick Sort for bookings).
+     */
+    private void performSort() {
+        if (filteredList.isEmpty()) {
+            showAlert(Alert.AlertType.WARNING, "No Data", "No bookings to sort.");
+            return;
+        }
+        
+        String algorithm = sortAlgorithmCombo != null ? sortAlgorithmCombo.getValue() : "Quick Sort";
+        String sortField = sortFieldCombo != null ? sortFieldCombo.getValue() : "Date (Check-in)";
+        
+        // Create comparator based on sort field
+        Comparator<Booking> comparator = getBookingComparator(sortField);
+        
+        // Convert to ArrayList for sorting
+        List<Booking> listToSort = new ArrayList<>(filteredList);
+        
+        // Perform sort based on selected algorithm
+        SortAlgorithms.SortResult<Booking> result;
+        switch (algorithm) {
+            case "Quick Sort":
+                result = SortAlgorithms.quickSort(listToSort, comparator);
+                break;
+            case "Merge Sort":
+                result = SortAlgorithms.mergeSort(listToSort, comparator);
+                break;
+            case "Heap Sort":
+                result = SortAlgorithms.heapSort(listToSort, comparator);
+                break;
+            default:
+                result = SortAlgorithms.quickSort(listToSort, comparator);
+        }
+        
+        // Update filtered list with sorted data
+        filteredList.clear();
+        filteredList.addAll(result.getSortedData());
+        bookingsTable.setItems(filteredList);
+        
+        // Update metrics label
+        if (sortMetricsLabel != null) {
+            sortMetricsLabel.setText(String.format("%s: %d ms, %d comparisons", 
+                result.getAlgorithmName(), result.getExecutionTime(), result.getComparisons()));
+            sortMetricsLabel.setTooltip(new Tooltip("Algorithm performance metrics"));
+        }
+        
+        showAlert(Alert.AlertType.INFORMATION, "Sort Complete", 
+            String.format("Sorted %d bookings using %s\nTime: %d ms\nComparisons: %d",
+                listToSort.size(), result.getAlgorithmName(), 
+                result.getExecutionTime(), result.getComparisons()));
+    }
+    
+    /**
+     * Get comparator for booking based on sort field.
+     */
+    private Comparator<Booking> getBookingComparator(String sortField) {
+        switch (sortField) {
+            case "Date (Check-in)":
+                return Comparator.comparing(b -> LocalDate.parse(b.getCheckInDate()));
+            case "Amount":
+                return Comparator.comparing(b -> {
+                    try {
+                        return Double.parseDouble(b.getTotalAmount().replace("₱", "").replace(",", ""));
+                    } catch (NumberFormatException e) {
+                        return 0.0;
+                    }
+                });
+            case "Guest Name":
+                return Comparator.comparing(Booking::getGuestName, String.CASE_INSENSITIVE_ORDER);
+            case "Status":
+                return Comparator.comparing(Booking::getStatus, String.CASE_INSENSITIVE_ORDER);
+            default:
+                return Comparator.comparing(b -> LocalDate.parse(b.getCheckInDate()));
+        }
     }
 
     /**
@@ -320,52 +537,11 @@ public class BookingsController implements Initializable {
             return;
         }
 
-        // Load full booking details from database
-        String query = "SELECT r.*, u.name as guest_name, u.email as guest_email, " +
-                      "h.name as hotel_name, h.address as hotel_address, " +
-                      "rm.room_type, rm.description as room_description, rm.price_per_night " +
-                      "FROM reservations r " +
-                      "JOIN users u ON r.user_id = u.id " +
-                      "JOIN rooms rm ON r.room_id = rm.id " +
-                      "JOIN hotels h ON rm.hotel_id = h.id " +
-                      "WHERE r.id = ?";
-
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            
-            stmt.setInt(1, selected.getId());
-            ResultSet rs = stmt.executeQuery();
-
-            if (rs.next()) {
-                StringBuilder details = new StringBuilder();
-                details.append("Reservation Number: ").append(rs.getString("reservation_number")).append("\n\n");
-                details.append("Guest Information:\n");
-                details.append("  Name: ").append(rs.getString("guest_name")).append("\n");
-                details.append("  Email: ").append(rs.getString("guest_email")).append("\n\n");
-                details.append("Hotel: ").append(rs.getString("hotel_name")).append("\n");
-                details.append("Address: ").append(rs.getString("hotel_address")).append("\n\n");
-                details.append("Room: ").append(rs.getString("room_type")).append("\n");
-                details.append("Check-in: ").append(rs.getDate("check_in_date")).append("\n");
-                details.append("Check-out: ").append(rs.getDate("check_out_date")).append("\n");
-                details.append("Guests: ").append(rs.getInt("adults")).append(" adults, ")
-                       .append(rs.getInt("children")).append(" children\n\n");
-                details.append("Total Amount: ").append(String.format("₱%.2f", rs.getDouble("total_amount"))).append("\n");
-                details.append("Status: ").append(rs.getString("status")).append("\n");
-                
-                if (rs.getString("special_requests") != null) {
-                    details.append("\nSpecial Requests: ").append(rs.getString("special_requests"));
-                }
-
-                Alert alert = new Alert(Alert.AlertType.INFORMATION);
-                alert.setTitle("Booking Details");
-                alert.setHeaderText(null);
-                alert.setContentText(details.toString());
-                alert.showAndWait();
-            }
-        } catch (SQLException e) {
-            showAlert(Alert.AlertType.ERROR, "Database Error", "Failed to load booking details: " + e.getMessage());
-            e.printStackTrace();
-        }
+        BookingDetailsDialog dialog = new BookingDetailsDialog(selected.getId(), v -> {
+            // Reload bookings when status changes
+            loadBookings();
+        });
+        dialog.showAndWait();
     }
 
     private void showAlert(Alert.AlertType type, String title, String message) {

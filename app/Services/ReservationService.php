@@ -51,17 +51,25 @@ class ReservationService
                     throw new \Exception('Room not available for the selected dates');
                 }
 
-                // Step 3: Reserve room inventory
-                $this->reserveRoomInventory($room->id, 1, 'reservation_created');
+                // Step 3: Reserve room inventory (only if check-in is today)
+                $checkInDate = Carbon::parse($reservationData['check_in_date']);
+                $isToday = $checkInDate->isToday();
+                
+                if ($isToday) {
+                    $this->reserveRoomInventory($room->id, 1, 'reservation_created', $checkInDate);
+                }
 
                 // Step 4: Create reservation record
                 $reservation = $this->createReservationRecord($reservationData);
 
                 // Step 5: Log transaction
+                $room->refresh(); // Refresh to get updated quantity
                 $this->logTransaction('reserve', $reservation->id, $room->id, [
-                    'before_quantity' => $room->available_quantity + 1,
+                    'before_quantity' => $isToday ? $room->available_quantity + 1 : $room->available_quantity,
                     'after_quantity' => $room->available_quantity,
-                    'change' => -1
+                    'change' => $isToday ? -1 : 0,
+                    'check_in_date' => $reservationData['check_in_date'],
+                    'availability_decremented' => $isToday
                 ]);
 
                 // Step 6: Send confirmation email
@@ -150,8 +158,14 @@ class ReservationService
                     throw new \Exception('Reservation cannot be cancelled');
                 }
 
-                // Restore room inventory
-                $this->restoreRoomInventory($reservation->room_id, 1, 'reservation_cancelled');
+                // Restore room inventory (only if availability was already decremented)
+                // Availability is only decremented if check-in date was today or in the past
+                $checkInDate = Carbon::parse($reservation->check_in_date);
+                $isTodayOrPast = $checkInDate->isToday() || $checkInDate->isPast();
+                
+                if ($isTodayOrPast) {
+                    $this->restoreRoomInventory($reservation->room_id, 1, 'reservation_cancelled');
+                }
 
                 // Update reservation status
                 $reservation->update([
@@ -326,6 +340,9 @@ class ReservationService
                     throw new \Exception('Only confirmed reservations can be checked out');
                 }
 
+                // Restore room availability (room becomes available again after checkout)
+                $this->restoreRoomInventory($reservation->room_id, 1, 'checkout_completed');
+
                 // Update reservation status
                 $reservation->update([
                     'status' => 'completed',
@@ -333,7 +350,8 @@ class ReservationService
 
                 // Log transaction
                 $this->logTransaction('checkout', $reservationId, $reservation->room_id, [
-                    'status_change' => 'confirmed -> completed'
+                    'status_change' => 'confirmed -> completed',
+                    'availability_restored' => true
                 ]);
 
                 return [
@@ -483,12 +501,19 @@ class ReservationService
         return $room;
     }
 
-    private function reserveRoomInventory(int $roomId, int $quantity, string $reason): void
+    private function reserveRoomInventory(int $roomId, int $quantity, string $reason, ?Carbon $checkInDate = null): void
     {
         $room = Room::find($roomId);
         
         if (!$room) {
             throw new \Exception('Room not found');
+        }
+
+        // Only decrement availability if check-in date is today
+        // For future dates, availability will be decremented when check-in date arrives
+        if ($checkInDate && !$checkInDate->isToday()) {
+            // Don't decrement for future dates
+            return;
         }
 
         if ($room->available_quantity < $quantity) {
@@ -530,6 +555,46 @@ class ReservationService
         $this->transactionStack->push(
             TransactionStack::createRoomInventoryAction($roomId, $quantity, $reason)
         );
+    }
+
+    /**
+     * Process reservations with check-in date = today and decrement availability
+     * This should be called daily (via scheduled job) or on page loads
+     * 
+     * Only processes reservations that were created BEFORE today (future reservations that are now due)
+     * Reservations created today with check-in today already had availability decremented during creation
+     */
+    public function processTodayCheckIns(): void
+    {
+        $today = Carbon::today();
+        
+        // Get all confirmed/pending reservations with check-in date = today
+        // that were created BEFORE today (future reservations that are now due)
+        $reservations = Reservation::where('check_in_date', $today->toDateString())
+            ->whereIn('status', ['pending', 'confirmed'])
+            ->whereDate('created_at', '<', $today->toDateString()) // Only process reservations created before today
+            ->with('room')
+            ->get();
+
+        foreach ($reservations as $reservation) {
+            try {
+                // Try to decrement availability
+                // This will only decrement if check-in date is today (which it is)
+                $this->reserveRoomInventory(
+                    $reservation->room_id, 
+                    1, 
+                    'check_in_date_arrived',
+                    Carbon::parse($reservation->check_in_date)
+                );
+                
+                Log::info("Processed check-in for reservation {$reservation->id}, decremented availability for room {$reservation->room_id}");
+            } catch (\Exception $e) {
+                // If it fails, availability might have already been decremented
+                // or there's insufficient availability (shouldn't happen for confirmed reservations)
+                // Silently continue - this is expected if already processed
+                Log::debug("Check-in processing for reservation {$reservation->id}: " . $e->getMessage());
+            }
+        }
     }
 
     private function createReservationRecord(array $data): Reservation

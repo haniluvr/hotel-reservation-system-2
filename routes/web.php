@@ -81,6 +81,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/payments/process/{reservationId}', [App\Http\Controllers\PaymentController::class, 'process'])->name('payments.process');
     Route::get('/payments/success/{reservationId}', [App\Http\Controllers\PaymentController::class, 'success'])->name('payments.success');
     Route::get('/payments/failure/{reservationId}', [App\Http\Controllers\PaymentController::class, 'failure'])->name('payments.failure');
+    Route::get('/payments/confirmation/{reservationId}', [App\Http\Controllers\PaymentController::class, 'confirmation'])->name('payments.confirmation');
+    Route::get('/payments/status/{reservationId}', [App\Http\Controllers\PaymentController::class, 'checkStatus'])->name('payments.status');
     
     // Invoice Routes
     Route::get('/invoices/{reservationId}', [App\Http\Controllers\InvoiceController::class, 'show'])->name('invoices.show');

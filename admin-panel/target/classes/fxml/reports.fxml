@@ -35,9 +35,11 @@
     <!-- Generate Buttons -->
     <HBox spacing="15">
         <Button fx:id="generateExcelBtn" text="Generate Excel Report" styleClass="btn-primary" 
-               prefWidth="200"/>
+               prefWidth="180"/>
         <Button fx:id="generatePDFBtn" text="Generate PDF Report" styleClass="btn-secondary" 
-               prefWidth="200"/>
+               prefWidth="180"/>
+        <Button fx:id="generateCSVBtn" text="Generate CSV Report" styleClass="btn-secondary" 
+               prefWidth="180"/>
     </HBox>
 </VBox>
 

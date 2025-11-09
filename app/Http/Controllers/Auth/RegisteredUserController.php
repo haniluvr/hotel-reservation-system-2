@@ -48,14 +48,28 @@ class RegisteredUserController extends Controller
         // Check for return URL from sessionStorage (passed via hidden input or session)
         $returnUrl = $request->input('return_url') ?? $request->session()->get('auth_return_url');
         
-        if ($returnUrl && filter_var($returnUrl, FILTER_VALIDATE_URL)) {
-            // Validate it's from the same domain
-            $parsedUrl = parse_url($returnUrl);
-            $currentHost = parse_url(config('app.url'), PHP_URL_HOST);
+        if ($returnUrl) {
+            // Handle both absolute and relative URLs
+            $isAbsoluteUrl = filter_var($returnUrl, FILTER_VALIDATE_URL);
             
-            if ($parsedUrl && isset($parsedUrl['host']) && $parsedUrl['host'] === $currentHost) {
-                $request->session()->forget('auth_return_url');
-                return redirect($returnUrl);
+            if ($isAbsoluteUrl) {
+                // Validate it's from the same domain
+                $parsedUrl = parse_url($returnUrl);
+                $appUrl = config('app.url');
+                $currentHost = parse_url($appUrl, PHP_URL_HOST);
+                
+                if ($parsedUrl && isset($parsedUrl['host']) && $parsedUrl['host'] === $currentHost) {
+                    $request->session()->forget('auth_return_url');
+                    return redirect($returnUrl);
+                }
+            } else {
+                // It's a relative URL, validate it's safe
+                $path = parse_url($returnUrl, PHP_URL_PATH) ?? $returnUrl;
+                // Only allow paths starting with /, not full URLs with different hosts
+                if (strpos($path, '/') === 0 && strpos($path, 'http') === false) {
+                    $request->session()->forget('auth_return_url');
+                    return redirect($path);
+                }
             }
         }
 

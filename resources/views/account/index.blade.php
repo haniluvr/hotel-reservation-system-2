@@ -4,7 +4,27 @@
 
 @section('content')
 <div class="min-h-screen bg-black pt-24 pb-12 px-4 sm:px-6 lg:px-8" 
-     x-data="{ activeTab: 'personal' }">
+     x-data="{ 
+         activeTab: 'personal',
+         deleteModalOpen: false,
+         deleteReason: '',
+         originalName: '{{ $user->name }}',
+         originalEmail: '{{ $user->email }}',
+         originalPhone: '{{ $user->phone ?? '' }}',
+         currentName: '{{ $user->name }}',
+         currentEmail: '{{ $user->email }}',
+         currentPhone: '{{ $user->phone ?? '' }}',
+         password: '',
+         get hasChanges() {
+             return this.currentName !== this.originalName || 
+                    this.currentEmail !== this.originalEmail || 
+                    this.currentPhone !== this.originalPhone;
+         },
+         get canSave() {
+             return !this.hasChanges || (this.hasChanges && this.password.length > 0);
+         }
+     }"
+     @open-delete-account-modal.window="deleteModalOpen = true">
     <div class="max-w-7xl mx-auto">
         <!-- Header -->
         <div class="mb-8">
@@ -72,6 +92,7 @@
                             <input type="text" 
                                    id="name" 
                                    name="name" 
+                                   x-model="currentName"
                                    value="{{ old('name', $user->name) }}"
                                    class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent text-white placeholder-gray-500">
                             @error('name')
@@ -84,6 +105,7 @@
                             <input type="email" 
                                    id="email" 
                                    name="email" 
+                                   x-model="currentEmail"
                                    value="{{ old('email', $user->email) }}"
                                    class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent text-white placeholder-gray-500">
                             @error('email')
@@ -96,6 +118,7 @@
                             <input type="text" 
                                    id="phone" 
                                    name="phone" 
+                                   x-model="currentPhone"
                                    value="{{ old('phone', $user->phone) }}"
                                    placeholder="Not provided"
                                    class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent text-white placeholder-gray-500">
@@ -104,8 +127,37 @@
                             @enderror
                         </div>
 
+                        <!-- Password Confirmation (shown when changes are detected) -->
+                        <div x-show="hasChanges"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 transform translate-y-2"
+                             x-transition:enter-end="opacity-100 transform translate-y-0"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 transform translate-y-0"
+                             x-transition:leave-end="opacity-0 transform translate-y-2"
+                             class="pt-4 border-t border-gray-800">
+                            <div>
+                                <label for="password" class="block text-sm font-medium text-gray-400 mb-2">
+                                    Confirm Password <span class="text-red-400">*</span>
+                                </label>
+                                <input type="password" 
+                                       id="password" 
+                                       name="password" 
+                                       x-model="password"
+                                       :required="hasChanges"
+                                       placeholder="Enter your password to confirm changes"
+                                       class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-green focus:border-transparent text-white placeholder-gray-500">
+                                @error('password')
+                                    <p class="mt-1 text-sm text-red-400">{{ $message }}</p>
+                                @enderror
+                                <p class="mt-1 text-xs text-gray-500">Please confirm your password to save changes.</p>
+                            </div>
+                        </div>
+
                         <div class="flex justify-end pt-4">
                             <button type="submit"
+                                    :disabled="!canSave"
+                                    :class="!canSave ? 'opacity-50 cursor-not-allowed' : ''"
                                     class="px-6 py-3 bg-primary-green hover:bg-primary-green-hover text-white font-medium rounded-lg transition-colors duration-200">
                                 Save Changes
                             </button>
@@ -257,34 +309,118 @@
                             </form>
                         </div>
 
-                        <!-- Delete Account Section -->
+                        <!-- Logout Section -->
                         <div class="pt-6 border-t border-gray-800">
-                            <h3 class="text-lg font-medium text-white mb-4">Archive Account</h3>
-                            <p class="text-gray-300 text-sm mb-6">Archive your account to free up your email address. Your account data will be moved to archived users and you can create a new account with the same email.</p>
+                            <h3 class="text-lg font-medium text-white mb-4">Logout</h3>
+                            <p class="text-gray-300 text-sm mb-6">Sign out of your account. You can sign back in anytime.</p>
                             
-                            <form method="POST" action="{{ route('account.archive') }}" 
-                                  onsubmit="return confirm('Are you sure you want to archive your account? This action cannot be undone.');">
+                            <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <div class="mb-4">
-                                    <label class="flex items-center">
-                                        <input type="checkbox" 
-                                               name="confirm" 
-                                               value="1" 
-                                               required
-                                               class="rounded border-gray-600 bg-gray-800 text-primary-green focus:ring-primary-green focus:ring-offset-0">
-                                        <span class="ml-2 text-sm text-gray-300">I understand that archiving my account will move my data to archived users and I can reuse my email address.</span>
-                                    </label>
-                                </div>
-                                
                                 <div class="flex justify-end">
                                     <button type="submit"
-                                            class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200">
-                                        Archive Account
+                                            class="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-medium rounded-lg transition-colors duration-200">
+                                        Logout
                                     </button>
                                 </div>
                             </form>
                         </div>
+
+                        <!-- Delete Account Section -->
+                        <div class="pt-6 border-t border-gray-800">
+                            <h3 class="text-lg font-medium text-white mb-4">Delete Account</h3>
+                            <p class="text-gray-300 text-sm mb-6">Permanently delete your account and all associated data. This action cannot be undone.</p>
+                            
+                            <div class="flex justify-end">
+                                <button type="button"
+                                        @click="$dispatch('open-delete-account-modal')"
+                                        class="px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                    Delete Account
+                                </button>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Account Confirmation Modal -->
+    <div x-show="deleteModalOpen"
+         x-cloak
+         @keydown.escape.window="deleteModalOpen = false"
+         class="fixed inset-0 z-50 overflow-y-auto"
+         style="display: none;"
+         x-transition:enter="ease-out duration-300"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0">
+        
+        <!-- Backdrop -->
+        <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" @click="deleteModalOpen = false"></div>
+        
+        <!-- Modal Container -->
+        <div class="flex min-h-full items-center justify-center p-4">
+            <div 
+                @click.away="deleteModalOpen = false"
+                class="relative w-full max-w-md transform overflow-hidden rounded-xl bg-gray-900 border border-gray-800 shadow-2xl transition-all"
+                x-transition:enter="ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                
+                <!-- Close Button -->
+                <button 
+                    @click="deleteModalOpen = false"
+                    class="absolute top-3 right-3 text-gray-400 hover:text-white transition-colors z-10">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+                
+                <!-- Modal Content -->
+                <div class="p-6">
+                    <div class="mb-6">
+                        <h2 class="text-2xl font-bold text-white mb-2">Delete Account</h2>
+                        <p class="text-gray-300 text-sm">Are you sure you want to delete your account? This action cannot be undone.</p>
+                    </div>
+
+                    <form method="POST" action="{{ route('account.archive') }}" class="space-y-4">
+                        @csrf
+                        <input type="hidden" name="confirm" value="1">
+                        
+                        <!-- Reason (Optional) -->
+                        <div>
+                            <label for="delete_reason" class="block text-sm font-medium text-gray-300 mb-2">
+                                Reason for deletion (optional)
+                            </label>
+                            <textarea 
+                                id="delete_reason"
+                                name="reason"
+                                x-model="deleteReason"
+                                rows="4"
+                                placeholder="Please let us know why you're deleting your account..."
+                                class="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-red-600 focus:border-transparent text-white placeholder-gray-500 resize-none"></textarea>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex gap-3 pt-4">
+                            <button 
+                                type="button"
+                                @click="deleteModalOpen = false"
+                                class="flex-1 px-4 py-3 bg-gray-800 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                Cancel
+                            </button>
+                            <button 
+                                type="submit"
+                                class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors duration-200">
+                                Delete Account
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

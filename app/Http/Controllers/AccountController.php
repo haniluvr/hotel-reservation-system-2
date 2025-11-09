@@ -18,9 +18,42 @@ class AccountController extends Controller
         $user = Auth::user();
         
         $bookings = $user->reservations()
-            ->with(['room.hotel'])
+            ->with(['room.hotel', 'payment'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
+
+        // Check and update payment status for pending Xendit payments
+        $xenditService = app(\App\Services\XenditPaymentService::class);
+        foreach ($bookings as $booking) {
+            if ($booking->payment && 
+                $booking->payment->payment_method === 'xendit' && 
+                $booking->payment->status === 'pending') {
+                try {
+                    $invoiceResult = $xenditService->getInvoice($booking->payment->xendit_invoice_id);
+                    
+                    if ($invoiceResult['success'] && isset($invoiceResult['invoice']['status']) && $invoiceResult['invoice']['status'] === 'PAID') {
+                        $invoice = $invoiceResult['invoice'];
+                        
+                        // Update payment status
+                        $booking->payment->update([
+                            'status' => 'paid',
+                            'paid_at' => now(),
+                            'payment_details' => array_merge($booking->payment->payment_details ?? [], $invoice),
+                        ]);
+
+                        // Update reservation status
+                        if ($booking->status === 'pending') {
+                            $booking->update([
+                                'status' => 'confirmed',
+                                'confirmed_at' => now(),
+                            ]);
+                        }
+                    }
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::warning('Failed to check payment status from Xendit: ' . $e->getMessage());
+                }
+            }
+        }
 
         return view('account.index', compact('user', 'bookings'));
     }
@@ -32,13 +65,37 @@ class AccountController extends Controller
     {
         $user = Auth::user();
 
-        $validated = $request->validate([
+        // Check if any changes were made
+        $hasChanges = $user->name !== $request->input('name') || 
+                     $user->email !== $request->input('email') || 
+                     ($user->phone ?? '') !== ($request->input('phone') ?? '');
+
+        // Validate password only if changes are detected
+        $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'phone' => ['nullable', 'string', 'max:20'],
-        ]);
+        ];
 
-        $user->update($validated);
+        if ($hasChanges) {
+            $rules['password'] = ['required', 'string'];
+        }
+
+        $validated = $request->validate($rules);
+
+        // If changes were made, verify password
+        if ($hasChanges) {
+            if (!Hash::check($validated['password'], $user->password)) {
+                return back()->withErrors(['password' => 'The password is incorrect.']);
+            }
+        }
+
+        // Update user information
+        $user->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+        ]);
 
         return redirect()->route('account.index')
             ->with('success', 'Personal information updated successfully.');
@@ -71,7 +128,7 @@ class AccountController extends Controller
     }
 
     /**
-     * Archive account (move to archived_users table)
+     * Delete account (move to archived_users table)
      */
     public function archiveAccount(Request $request)
     {
@@ -79,6 +136,7 @@ class AccountController extends Controller
 
         $request->validate([
             'confirm' => ['required', 'accepted'],
+            'reason' => ['nullable', 'string', 'max:1000'],
         ]);
 
         DB::beginTransaction();
@@ -92,6 +150,7 @@ class AccountController extends Controller
                 'password' => $user->password,
                 'remember_token' => $user->remember_token,
                 'archived_at' => now(),
+                'reason' => $request->input('reason'),
                 'created_at' => $user->created_at,
                 'updated_at' => $user->updated_at,
             ]);
@@ -106,10 +165,10 @@ class AccountController extends Controller
             $request->session()->regenerateToken();
 
             return redirect()->route('home')
-                ->with('success', 'Your account has been archived. You can now use the same email to create a new account.');
+                ->with('success', 'Your account has been deleted. You can now use the same email to create a new account.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->withErrors(['error' => 'Failed to archive account. Please try again.']);
+            return back()->withErrors(['error' => 'Failed to delete account. Please try again.']);
         }
     }
 }

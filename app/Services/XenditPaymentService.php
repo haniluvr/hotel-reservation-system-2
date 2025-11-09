@@ -34,16 +34,23 @@ class XenditPaymentService
     public function createInvoice(array $paymentData): array
     {
         try {
+            // Build customer data - only include mobile_number if it's provided and not null
+            $customerData = [
+                'given_names' => $paymentData['customer']['given_names'] ?? 'Guest',
+                'email' => $paymentData['customer']['email'] ?? 'guest@example.com',
+            ];
+            
+            // Only include mobile_number if it exists and is not null
+            if (isset($paymentData['customer']['mobile_number']) && $paymentData['customer']['mobile_number'] !== null) {
+                $customerData['mobile_number'] = (string) $paymentData['customer']['mobile_number'];
+            }
+            
             $invoiceData = [
                 'external_id' => $paymentData['external_id'] ?? uniqid('BEL_'),
                 'amount' => $paymentData['amount'],
                 'description' => $paymentData['description'] ?? 'Hotel Reservation Payment',
                 'invoice_duration' => 86400, // 24 hours
-                'customer' => [
-                    'given_names' => $paymentData['customer']['given_names'] ?? 'Guest',
-                    'email' => $paymentData['customer']['email'] ?? 'guest@example.com',
-                    'mobile_number' => $paymentData['customer']['mobile_number'] ?? null,
-                ],
+                'customer' => $customerData,
                 'customer_notification_preference' => [
                     'invoice_created' => ['email'],
                     'invoice_reminder' => ['email'],
@@ -307,17 +314,25 @@ class XenditPaymentService
             'Content-Type' => 'application/json',
         ];
 
-        $response = Http::withHeaders($headers)
+        // For development, disable SSL verification if certificate bundle is not available
+        $httpClient = Http::withHeaders($headers)
             ->timeout(30);
+        
+        // In development, allow SSL verification to be disabled
+        if (config('app.env') === 'local' || config('app.env') === 'development') {
+            $httpClient = $httpClient->withoutVerifying();
+        }
 
         if ($method === 'GET') {
-            $response = $response->get($url, $data);
+            $response = $httpClient->get($url, $data);
         } else {
-            $response = $response->$method($url, $data);
+            $response = $httpClient->$method($url, $data);
         }
 
         if (!$response->successful()) {
-            throw new \Exception("Xendit API request failed: " . $response->body());
+            $errorBody = $response->body();
+            $statusCode = $response->status();
+            throw new \Exception("Xendit API request failed (Status: {$statusCode}): " . $errorBody);
         }
 
         return $response->json();

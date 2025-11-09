@@ -3,7 +3,7 @@
 @section('title', 'Booking Details - The Belmont Hotel - Discover Your Perfect Getaway. Experience luxury and comfort at Belmont Hotel El Nido, Palawan.')
 
 @section('content')
-<div class="min-h-screen bg-black py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-black pt-24 pb-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-4xl mx-auto">
         <!-- Header -->
         <div class="mb-8">
@@ -110,15 +110,15 @@
                             Complete Payment
                         </a>
                     @endif
-                    @if(in_array($booking->status, ['pending', 'confirmed']))
-                        <button class="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors duration-200">
-                            Cancel Booking
-                        </button>
-                    @endif
                     <a href="{{ route('rooms.show', $booking->room->slug) }}"
                         class="px-6 py-3 bg-gray-800 hover:bg-gray-700 text-gray-300 font-medium rounded-lg transition-colors duration-200 text-center">
                         View Room Details
                     </a>
+                    @if(in_array($booking->status, ['pending', 'confirmed']))
+                        <a href="{{ route('bookings.cancel', $booking->id) }}" class="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors duration-200 text-center ml-auto">
+                            Cancel Booking
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>

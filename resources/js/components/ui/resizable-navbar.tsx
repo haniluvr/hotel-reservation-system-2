@@ -295,7 +295,7 @@ export const NavbarButton = ({
   if (Tag === 'button' && !buttonProps.type) {
     buttonProps.type = 'button';
   }
-  
+
   return React.createElement(
     Tag,
     buttonProps,

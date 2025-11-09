@@ -28,21 +28,26 @@ class HomeController extends Controller
         ->where('name', 'Belmont Hotel')
         ->firstOrFail();
 
-        // Get featured rooms (first 6 active rooms)
+        // Get featured rooms (first 6 active rooms, regardless of availability)
         $featuredRooms = $hotel->rooms()
             ->active()
-            ->available()
             ->limit(6)
             ->get()
             ->map(function ($room) {
                 return [
                     'id' => $room->id,
-                    'name' => $room->room_type,
+                    'room_type' => $room->room_type,
                     'slug' => $room->slug,
-                    'price' => $room->price_per_night,
+                    'price_per_night' => $room->price_per_night ?? 0,
                     'description' => $room->description,
                     'image' => $room->getRoomImages()[0] ?? 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
                     'images' => $room->getRoomImages(),
+                    'available_quantity' => $room->available_quantity ?? 0,
+                    'max_guests' => $room->max_guests ?? 2,
+                    'max_adults' => $room->max_adults ?? 2,
+                    'max_children' => $room->max_children ?? 0,
+                    'size' => $room->size,
+                    'amenities' => $room->amenities ?? [],
                 ];
             });
 

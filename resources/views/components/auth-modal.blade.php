@@ -23,11 +23,9 @@
         }, 300);
     },
     init() {
-        console.log('Auth modal initialized');
         // Listen for openAuthModal events
         const self = this;
         const eventHandler = function(e) {
-            console.log('openAuthModal event received:', e.detail);
             // Store current URL before opening modal
             if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
                 sessionStorage.setItem('auth_return_url', window.location.href);
@@ -38,7 +36,6 @@
         
         // Expose openModal to window for direct access
         window.authModalOpen = (type) => {
-            console.log('authModalOpen called with type:', type);
             // Store current URL before opening modal
             if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
                 sessionStorage.setItem('auth_return_url', window.location.href);
@@ -48,7 +45,6 @@
         
         // Also expose via data attribute for direct DOM access
         this.$el.setAttribute('data-modal-ready', 'true');
-        console.log('Modal ready, data-modal-ready attribute set');
     }
 }" 
 x-show="open"
@@ -94,7 +90,8 @@ x-transition:leave-end="opacity-0">
                     <p class="text-gray-400 text-sm">Sign in to your account to continue</p>
                 </div>
 
-                <form method="POST" action="{{ route('login') }}" class="space-y-5" x-data="{ returnUrl: sessionStorage.getItem('auth_return_url') || '' }">
+                <form method="POST" action="{{ route('login') }}" class="space-y-5" 
+                      x-data="{ returnUrl: sessionStorage.getItem('auth_return_url') || '' }">
                     @csrf
                     <input type="hidden" name="return_url" x-bind:value="returnUrl">
 

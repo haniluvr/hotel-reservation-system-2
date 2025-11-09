@@ -1,14 +1,62 @@
 @extends('layouts.app')
 
-@section('title', 'Complete Your Booking - The Belmont Hotel - Discover Your Perfect Getaway. Experience luxury and comfort at Belmont Hotel El Nido, Palawan.')
+@section('title', 'Complete Your Reservation - The Belmont Hotel - Discover Your Perfect Getaway. Experience luxury and comfort at Belmont Hotel El Nido, Palawan.')
 
 @section('content')
-<div class="min-h-screen bg-black py-12 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-black pt-24 pb-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-4xl mx-auto">
-        <!-- Header -->
+        <!-- Progress Bar -->
         <div class="mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">Complete Your Booking</h1>
-            <p class="text-gray-300 text-lg">Review your reservation details and complete your booking</p>
+            <div class="flex items-center justify-between max-w-xl mx-auto">
+                <!-- Step 1: Select Room -->
+                <div class="flex flex-col items-center flex-1">
+                    <div class="w-6 h-6 rounded-full bg-primary-green flex items-center justify-center mb-1.5">
+                        <svg class="w-3 h-3 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <span class="text-[10px] text-gray-400 text-center">Select Room</span>
+                </div>
+                
+                <!-- Connector Line 1 -->
+                <div class="flex-1 h-0.5 bg-primary-green mx-1.5 -mt-4"></div>
+                
+                <!-- Step 2: Reservation (Current) -->
+                <div class="flex flex-col items-center flex-1">
+                    <div class="w-6 h-6 rounded-full bg-primary-green flex items-center justify-center mb-1.5 ring-2 ring-primary-green/30">
+                        <span class="text-black text-[10px] font-semibold">2</span>
+                    </div>
+                    <span class="text-[10px] text-primary-green font-medium text-center">Reservation</span>
+                </div>
+                
+                <!-- Connector Line 2 -->
+                <div class="flex-1 h-0.5 bg-gray-700 mx-1.5 -mt-4"></div>
+                
+                <!-- Step 3: Payment -->
+                <div class="flex flex-col items-center flex-1">
+                    <div class="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center mb-1.5">
+                        <span class="text-gray-400 text-[10px] font-semibold">3</span>
+                    </div>
+                    <span class="text-[10px] text-gray-400 text-center">Payment</span>
+                </div>
+                
+                <!-- Connector Line 3 -->
+                <div class="flex-1 h-0.5 bg-gray-700 mx-1.5 -mt-4"></div>
+                
+                <!-- Step 4: Confirmation -->
+                <div class="flex flex-col items-center flex-1">
+                    <div class="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center mb-1.5">
+                        <span class="text-gray-400 text-[10px] font-semibold">4</span>
+                    </div>
+                    <span class="text-[10px] text-gray-400 text-center">Confirmation</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <div class="mb-8 pt-4">
+            <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">Complete Your Reservation</h1>
+            <p class="text-gray-300 text-lg">Review your reservation details and complete your reservation</p>
         </div>
 
         @if ($errors->any())
@@ -22,7 +70,7 @@
         @endif
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- Booking Form -->
+            <!-- Reservation Form -->
             <div class="lg:col-span-2">
                 <div class="bg-gray-900 rounded-2xl shadow-lg border border-gray-800 p-6 mb-6">
                     <h2 class="text-xl font-semibold text-white mb-6">Guest Information</h2>
@@ -91,17 +139,17 @@
                         <div class="mt-8">
                             <button type="submit"
                                 class="w-full bg-primary-green hover:bg-primary-green-hover text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200">
-                                Confirm Booking
+                                Confirm Reservation
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- Booking Summary -->
+            <!-- Reservation Summary -->
             <div class="lg:col-span-1">
                 <div class="bg-gray-900 rounded-2xl shadow-lg border border-gray-800 p-6 sticky top-24">
-                    <h2 class="text-xl font-semibold text-white mb-6">Booking Summary</h2>
+                    <h2 class="text-xl font-semibold text-white mb-6">Summary</h2>
 
                     <!-- Room Info -->
                     <div class="mb-6">
@@ -160,7 +208,7 @@
 
                     <div class="mt-6 pt-6 border-t border-gray-800">
                         <p class="text-xs text-gray-400">
-                            By confirming this booking, you agree to our terms and conditions. 
+                            By confirming this reservation, you agree to our terms and conditions. 
                             Payment will be processed upon confirmation.
                         </p>
                     </div>

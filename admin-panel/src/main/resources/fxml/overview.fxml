@@ -4,9 +4,102 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<VBox spacing="25" style="-fx-padding: 25px;">
-    <Label text="Dashboard Overview" styleClass="label-title"/>
-    
-    <!-- Metrics will be loaded dynamically -->
-</VBox>
+<ScrollPane fitToWidth="true" styleClass="content-area">
+    <VBox spacing="20" style="-fx-padding: 25px;">
+        <!-- Header with refresh controls -->
+        <HBox spacing="15" alignment="CENTER_LEFT">
+            <Label text="Dashboard Overview" styleClass="label-title"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="lastUpdatedLabel" text="Last updated: --" style="-fx-text-fill: #666; -fx-font-size: 12px;"/>
+            <Button fx:id="refreshBtn" text="Refresh" styleClass="btn-primary"/>
+            <CheckBox fx:id="autoRefreshCheckBox" text="Auto-refresh (30s)"/>
+        </HBox>
+        
+        <!-- Additional Metrics -->
+        <GridPane hgap="20" vgap="20">
+            <columnConstraints>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints vgrow="ALWAYS" minHeight="120"/>
+            </rowConstraints>
+            
+            <VBox styleClass="metric-card" alignment="CENTER" spacing="10" GridPane.columnIndex="0">
+                <Label text="Today's Bookings" styleClass="metric-label"/>
+                <Label fx:id="todaysBookingsLabel" text="0" styleClass="metric-value"/>
+            </VBox>
+            
+            <VBox styleClass="metric-card" alignment="CENTER" spacing="10" GridPane.columnIndex="1">
+                <Label text="Today's Revenue" styleClass="metric-label"/>
+                <Label fx:id="todaysRevenueLabel" text="₱0.00" styleClass="metric-value"/>
+            </VBox>
+            
+            <VBox styleClass="metric-card" alignment="CENTER" spacing="10" GridPane.columnIndex="2">
+                <Label text="Upcoming Check-ins" styleClass="metric-label"/>
+                <Label fx:id="upcomingCheckInsLabel" text="0" styleClass="metric-value"/>
+            </VBox>
+            
+            <VBox styleClass="metric-card" alignment="CENTER" spacing="10" GridPane.columnIndex="3">
+                <Label text="Upcoming Check-outs" styleClass="metric-label"/>
+                <Label fx:id="upcomingCheckOutsLabel" text="0" styleClass="metric-value"/>
+            </VBox>
+        </GridPane>
+        
+        <GridPane hgap="20" vgap="20">
+            <columnConstraints>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
+                <ColumnConstraints hgrow="ALWAYS" minWidth="180"/>
+            </columnConstraints>
+            <rowConstraints>
+                <RowConstraints vgrow="ALWAYS" minHeight="120"/>
+            </rowConstraints>
+            
+            <VBox styleClass="metric-card" alignment="CENTER" spacing="10" GridPane.columnIndex="0">
+                <Label text="Occupancy Rate" styleClass="metric-label"/>
+                <Label fx:id="occupancyPercentageLabel" text="0%" styleClass="metric-value"/>
+            </VBox>
+            
+            <VBox styleClass="metric-card" alignment="CENTER" spacing="10" GridPane.columnIndex="1">
+                <Label text="Average Booking Value" styleClass="metric-label"/>
+                <Label fx:id="averageBookingValueLabel" text="₱0.00" styleClass="metric-value"/>
+            </VBox>
+        </GridPane>
+        
+        <!-- Charts Section -->
+        <VBox fx:id="chartsContainer" spacing="15">
+            <!-- Charts will be loaded dynamically -->
+        </VBox>
+        
+        <!-- Recent Activity Section -->
+        <VBox fx:id="recentActivityContainer" spacing="15">
+            <!-- Recent activity will be loaded dynamically -->
+        </VBox>
+        
+        <!-- Task Queue Section (PriorityQueue Data Structure) -->
+        <TitledPane text="Task Queue (PriorityQueue Data Structure)" expanded="true">
+            <VBox spacing="15" style="-fx-padding: 15px;">
+                <HBox spacing="10" alignment="CENTER_LEFT">
+                    <Label fx:id="pendingTasksLabel" text="Pending Tasks: 0" style="-fx-font-weight: bold;"/>
+                    <Label fx:id="currentTaskLabel" text="Current Task: None" style="-fx-font-weight: bold; -fx-text-fill: #2196F3;"/>
+                    <Region HBox.hgrow="ALWAYS"/>
+                    <Button fx:id="processQueueBtn" text="Process Queue" styleClass="btn-primary"/>
+                </HBox>
+                
+                <Label text="Task History (Last 10 Completed):" style="-fx-font-weight: bold;"/>
+                <TableView fx:id="taskHistoryTable" prefHeight="200">
+                    <columns>
+                        <TableColumn fx:id="taskTypeCol" text="Type" prefWidth="150"/>
+                        <TableColumn fx:id="taskPriorityCol" text="Priority" prefWidth="100"/>
+                        <TableColumn fx:id="taskStatusCol" text="Status" prefWidth="100"/>
+                        <TableColumn fx:id="taskDescriptionCol" text="Description" prefWidth="250"/>
+                        <TableColumn fx:id="taskResultCol" text="Result" prefWidth="200"/>
+                    </columns>
+                </TableView>
+            </VBox>
+        </TitledPane>
+    </VBox>
+</ScrollPane>
 

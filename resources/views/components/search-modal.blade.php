@@ -6,19 +6,16 @@
     adults: 2,
     children: 0,
     init() {
-        console.log('Search modal initialized');
         const self = this;
         
         // Listen for openSearchModal events
         const eventHandler = function(e) {
-            console.log('openSearchModal event received');
             self.openModal();
         };
         window.addEventListener('openSearchModal', eventHandler);
         
         // Expose openModal to window for direct access
         window.searchModalOpen = () => {
-            console.log('searchModalOpen called');
             self.openModal();
         };
         

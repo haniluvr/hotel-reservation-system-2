@@ -13,10 +13,7 @@ interface DestinationCardsProps {
 }
 
 function DestinationCards({ destinations }: DestinationCardsProps) {
-	console.log("DestinationCards component rendering with destinations:", destinations);
-
 	if (!destinations || destinations.length === 0) {
-		console.warn("No destinations provided to DestinationCards");
 		return React.createElement(
 			"div",
 			{ className: "text-center py-12 text-gray-600" },
