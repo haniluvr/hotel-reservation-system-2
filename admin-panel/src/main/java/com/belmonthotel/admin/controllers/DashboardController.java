@@ -725,10 +725,16 @@ public class DashboardController {
         setActiveButton(dashboardBtn);
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/overview.fxml"));
+            loader.setController(this); // Set this controller so FXML elements are injected
             Node overviewNode = loader.load();
             mainContainer.setCenter(overviewNode);
+            // Reload data after showing overview
+            loadOverviewDataAsync();
+            loadCharts();
+            loadRecentActivity();
         } catch (IOException e) {
             e.printStackTrace();
+            showAlert("Error", "Failed to load dashboard overview: " + e.getMessage());
         }
     }
 

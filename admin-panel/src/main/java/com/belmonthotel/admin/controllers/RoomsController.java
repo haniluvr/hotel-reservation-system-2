@@ -891,160 +891,177 @@ public class RoomsController implements Initializable {
      * View room dependencies using Graph data structure (BFS, DFS, Shortest Path).
      */
     private void viewRoomDependencies() {
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.setTitle("Room Dependencies (Graph Data Structure)");
-        dialog.setHeaderText("Room Dependency Network with Graph Algorithms");
-        dialog.initModality(Modality.APPLICATION_MODAL);
-        
-        VBox content = new VBox(15);
-        content.setPadding(new Insets(20));
-        content.setPrefWidth(900);
-        
-        // Build graph from rooms
-        RoomDependencyGraph graph = buildRoomDependencyGraph();
-        
-        // Graph Statistics
-        Map<String, Object> stats = graph.getStatistics();
-        Label statsLabel = new Label(String.format(
-            "Graph Statistics: %d nodes, %d edges, %d connected components",
-            stats.get("nodes"), stats.get("edges"), stats.get("connectedComponents")
-        ));
-        statsLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
-        content.getChildren().add(statsLabel);
-        
-        // Graph Visualization (simple text representation)
-        TitledPane graphVizPane = new TitledPane();
-        graphVizPane.setText("Graph Structure (Nodes and Edges)");
-        graphVizPane.setExpanded(true);
-        
-        ScrollPane graphScroll = new ScrollPane();
-        VBox graphContent = new VBox(10);
-        graphContent.setPadding(new Insets(10));
-        
-        // Display nodes
-        Label nodesLabel = new Label("Nodes (Rooms):");
-        nodesLabel.setStyle("-fx-font-weight: bold;");
-        graphContent.getChildren().add(nodesLabel);
-        
-        for (GraphNode node : graph.getAllNodes()) {
-            Label nodeLabel = new Label("  " + node.toString());
-            nodeLabel.setStyle(node.isAvailable() ? "-fx-text-fill: green;" : "-fx-text-fill: red;");
-            graphContent.getChildren().add(nodeLabel);
-        }
-        
-        // Display edges
-        Label edgesLabel = new Label("\nEdges (Dependencies):");
-        edgesLabel.setStyle("-fx-font-weight: bold;");
-        graphContent.getChildren().add(edgesLabel);
-        
-        for (GraphEdge edge : graph.getAllEdges()) {
-            Label edgeLabel = new Label("  " + edge.toString());
-            graphContent.getChildren().add(edgeLabel);
-        }
-        
-        graphScroll.setContent(graphContent);
-        graphScroll.setPrefHeight(200);
-        graphVizPane.setContent(graphScroll);
-        content.getChildren().add(graphVizPane);
-        
-        // Algorithm Controls
-        TitledPane algoPane = new TitledPane();
-        algoPane.setText("Graph Algorithms (BFS, DFS, Shortest Path)");
-        algoPane.setExpanded(true);
-        
-        VBox algoContent = new VBox(15);
-        algoContent.setPadding(new Insets(15));
-        
-        // BFS Section
-        HBox bfsBox = new HBox(10);
-        bfsBox.setAlignment(Pos.CENTER_LEFT);
-        ComboBox<Integer> bfsStartCombo = new ComboBox<>();
-        bfsStartCombo.setPromptText("Select Start Room");
-        for (GraphNode node : graph.getAllNodes()) {
-            bfsStartCombo.getItems().add(node.getRoomId());
-        }
-        Button bfsBtn = new Button("BFS - Find Available Chain");
-        Label bfsResultLabel = new Label();
-        bfsResultLabel.setWrapText(true);
-        
-        bfsBtn.setOnAction(e -> {
-            Integer startRoom = bfsStartCombo.getValue();
-            if (startRoom != null) {
-                List<Integer> chain = graph.bfsFindAvailableChain(startRoom);
-                bfsResultLabel.setText("BFS Chain: " + chain.toString() + 
-                    " (Found " + chain.size() + " available rooms)");
-                bfsResultLabel.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
+        try {
+            Dialog<Void> dialog = new Dialog<>();
+            dialog.setTitle("Room Dependencies (Graph Data Structure)");
+            dialog.setHeaderText("Room Dependency Network with Graph Algorithms");
+            dialog.initModality(Modality.APPLICATION_MODAL);
+            
+            VBox content = new VBox(15);
+            content.setPadding(new Insets(20));
+            content.setPrefWidth(900);
+            
+            // Build graph from rooms
+            RoomDependencyGraph graph = buildRoomDependencyGraph();
+            
+            // Check if graph is empty
+            if (graph.getAllNodes().isEmpty()) {
+                Label emptyLabel = new Label("No rooms found in database. Please add rooms first.");
+                emptyLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: red;");
+                content.getChildren().add(emptyLabel);
+                dialog.getDialogPane().setContent(content);
+                dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+                dialog.showAndWait();
+                return;
             }
-        });
-        
-        bfsBox.getChildren().addAll(new Label("BFS Start Room:"), bfsStartCombo, bfsBtn);
-        algoContent.getChildren().addAll(bfsBox, bfsResultLabel);
-        
-        // DFS Section
-        HBox dfsBox = new HBox(10);
-        dfsBox.setAlignment(Pos.CENTER_LEFT);
-        ComboBox<Integer> dfsStartCombo = new ComboBox<>();
-        dfsStartCombo.setPromptText("Select Start Room");
-        for (GraphNode node : graph.getAllNodes()) {
-            dfsStartCombo.getItems().add(node.getRoomId());
-        }
-        Button dfsBtn = new Button("DFS - Traverse Dependencies");
-        Label dfsResultLabel = new Label();
-        dfsResultLabel.setWrapText(true);
-        
-        dfsBtn.setOnAction(e -> {
-            Integer startRoom = dfsStartCombo.getValue();
-            if (startRoom != null) {
-                List<Integer> traversal = graph.dfsTraverseDependencies(startRoom);
-                dfsResultLabel.setText("DFS Traversal: " + traversal.toString() + 
-                    " (Visited " + traversal.size() + " rooms)");
-                dfsResultLabel.setStyle("-fx-text-fill: blue; -fx-font-weight: bold;");
+            
+            // Graph Statistics
+            Map<String, Object> stats = graph.getStatistics();
+            Label statsLabel = new Label(String.format(
+                "Graph Statistics: %d nodes, %d edges, %d connected components",
+                stats.get("nodes"), stats.get("edges"), stats.get("connectedComponents")
+            ));
+            statsLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+            content.getChildren().add(statsLabel);
+            
+            // Graph Visualization (simple text representation)
+            TitledPane graphVizPane = new TitledPane();
+            graphVizPane.setText("Graph Structure (Nodes and Edges)");
+            graphVizPane.setExpanded(true);
+            
+            ScrollPane graphScroll = new ScrollPane();
+            VBox graphContent = new VBox(10);
+            graphContent.setPadding(new Insets(10));
+            
+            // Display nodes
+            Label nodesLabel = new Label("Nodes (Rooms):");
+            nodesLabel.setStyle("-fx-font-weight: bold;");
+            graphContent.getChildren().add(nodesLabel);
+            
+            for (GraphNode node : graph.getAllNodes()) {
+                Label nodeLabel = new Label("  " + node.toString());
+                nodeLabel.setStyle(node.isAvailable() ? "-fx-text-fill: green;" : "-fx-text-fill: red;");
+                graphContent.getChildren().add(nodeLabel);
             }
-        });
-        
-        dfsBox.getChildren().addAll(new Label("DFS Start Room:"), dfsStartCombo, dfsBtn);
-        algoContent.getChildren().addAll(dfsBox, dfsResultLabel);
-        
-        // Shortest Path Section
-        HBox pathBox = new HBox(10);
-        pathBox.setAlignment(Pos.CENTER_LEFT);
-        ComboBox<Integer> fromCombo = new ComboBox<>();
-        fromCombo.setPromptText("From Room");
-        ComboBox<Integer> toCombo = new ComboBox<>();
-        toCombo.setPromptText("To Room");
-        for (GraphNode node : graph.getAllNodes()) {
-            fromCombo.getItems().add(node.getRoomId());
-            toCombo.getItems().add(node.getRoomId());
-        }
-        Button pathBtn = new Button("Find Shortest Path");
-        Label pathResultLabel = new Label();
-        pathResultLabel.setWrapText(true);
-        
-        pathBtn.setOnAction(e -> {
-            Integer from = fromCombo.getValue();
-            Integer to = toCombo.getValue();
-            if (from != null && to != null) {
-                List<Integer> path = graph.shortestPath(from, to);
-                if (path.isEmpty()) {
-                    pathResultLabel.setText("No path found between room " + from + " and room " + to);
-                    pathResultLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
-                } else {
-                    pathResultLabel.setText("Shortest Path: " + path.toString() + 
-                        " (Path length: " + (path.size() - 1) + " edges)");
-                    pathResultLabel.setStyle("-fx-text-fill: purple; -fx-font-weight: bold;");
+            
+            // Display edges
+            Label edgesLabel = new Label("\nEdges (Dependencies):");
+            edgesLabel.setStyle("-fx-font-weight: bold;");
+            graphContent.getChildren().add(edgesLabel);
+            
+            for (GraphEdge edge : graph.getAllEdges()) {
+                Label edgeLabel = new Label("  " + edge.toString());
+                graphContent.getChildren().add(edgeLabel);
+            }
+            
+            graphScroll.setContent(graphContent);
+            graphScroll.setPrefHeight(200);
+            graphVizPane.setContent(graphScroll);
+            content.getChildren().add(graphVizPane);
+            
+            // Algorithm Controls
+            TitledPane algoPane = new TitledPane();
+            algoPane.setText("Graph Algorithms (BFS, DFS, Shortest Path)");
+            algoPane.setExpanded(true);
+            
+            VBox algoContent = new VBox(15);
+            algoContent.setPadding(new Insets(15));
+            
+            // BFS Section
+            HBox bfsBox = new HBox(10);
+            bfsBox.setAlignment(Pos.CENTER_LEFT);
+            ComboBox<Integer> bfsStartCombo = new ComboBox<>();
+            bfsStartCombo.setPromptText("Select Start Room");
+            for (GraphNode node : graph.getAllNodes()) {
+                bfsStartCombo.getItems().add(node.getRoomId());
+            }
+            Button bfsBtn = new Button("BFS - Find Available Chain");
+            Label bfsResultLabel = new Label();
+            bfsResultLabel.setWrapText(true);
+            
+            bfsBtn.setOnAction(e -> {
+                Integer startRoom = bfsStartCombo.getValue();
+                if (startRoom != null) {
+                    List<Integer> chain = graph.bfsFindAvailableChain(startRoom);
+                    bfsResultLabel.setText("BFS Chain: " + chain.toString() + 
+                        " (Found " + chain.size() + " available rooms)");
+                    bfsResultLabel.setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
                 }
+            });
+            
+            bfsBox.getChildren().addAll(new Label("BFS Start Room:"), bfsStartCombo, bfsBtn);
+            algoContent.getChildren().addAll(bfsBox, bfsResultLabel);
+            
+            // DFS Section
+            HBox dfsBox = new HBox(10);
+            dfsBox.setAlignment(Pos.CENTER_LEFT);
+            ComboBox<Integer> dfsStartCombo = new ComboBox<>();
+            dfsStartCombo.setPromptText("Select Start Room");
+            for (GraphNode node : graph.getAllNodes()) {
+                dfsStartCombo.getItems().add(node.getRoomId());
             }
-        });
-        
-        pathBox.getChildren().addAll(new Label("From:"), fromCombo, new Label("To:"), toCombo, pathBtn);
-        algoContent.getChildren().addAll(pathBox, pathResultLabel);
-        
-        algoPane.setContent(algoContent);
-        content.getChildren().add(algoPane);
-        
-        dialog.getDialogPane().setContent(content);
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-        dialog.showAndWait();
+            Button dfsBtn = new Button("DFS - Traverse Dependencies");
+            Label dfsResultLabel = new Label();
+            dfsResultLabel.setWrapText(true);
+            
+            dfsBtn.setOnAction(e -> {
+                Integer startRoom = dfsStartCombo.getValue();
+                if (startRoom != null) {
+                    List<Integer> traversal = graph.dfsTraverseDependencies(startRoom);
+                    dfsResultLabel.setText("DFS Traversal: " + traversal.toString() + 
+                        " (Visited " + traversal.size() + " rooms)");
+                    dfsResultLabel.setStyle("-fx-text-fill: blue; -fx-font-weight: bold;");
+                }
+            });
+            
+            dfsBox.getChildren().addAll(new Label("DFS Start Room:"), dfsStartCombo, dfsBtn);
+            algoContent.getChildren().addAll(dfsBox, dfsResultLabel);
+            
+            // Shortest Path Section
+            HBox pathBox = new HBox(10);
+            pathBox.setAlignment(Pos.CENTER_LEFT);
+            ComboBox<Integer> fromCombo = new ComboBox<>();
+            fromCombo.setPromptText("From Room");
+            ComboBox<Integer> toCombo = new ComboBox<>();
+            toCombo.setPromptText("To Room");
+            for (GraphNode node : graph.getAllNodes()) {
+                fromCombo.getItems().add(node.getRoomId());
+                toCombo.getItems().add(node.getRoomId());
+            }
+            Button pathBtn = new Button("Find Shortest Path");
+            Label pathResultLabel = new Label();
+            pathResultLabel.setWrapText(true);
+            
+            pathBtn.setOnAction(e -> {
+                Integer from = fromCombo.getValue();
+                Integer to = toCombo.getValue();
+                if (from != null && to != null) {
+                    List<Integer> path = graph.shortestPath(from, to);
+                    if (path.isEmpty()) {
+                        pathResultLabel.setText("No path found between room " + from + " and room " + to);
+                        pathResultLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold;");
+                    } else {
+                        pathResultLabel.setText("Shortest Path: " + path.toString() + 
+                            " (Path length: " + (path.size() - 1) + " edges)");
+                        pathResultLabel.setStyle("-fx-text-fill: purple; -fx-font-weight: bold;");
+                    }
+                }
+            });
+            
+            pathBox.getChildren().addAll(new Label("From:"), fromCombo, new Label("To:"), toCombo, pathBtn);
+            algoContent.getChildren().addAll(pathBox, pathResultLabel);
+            
+            algoPane.setContent(algoContent);
+            content.getChildren().add(algoPane);
+            
+            dialog.getDialogPane().setContent(content);
+            dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
+            dialog.showAndWait();
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Error", 
+                "Failed to display room dependencies graph: " + e.getMessage());
+        }
     }
     
     /**

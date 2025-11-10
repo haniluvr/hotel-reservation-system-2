@@ -4,7 +4,9 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<ScrollPane fitToWidth="true" styleClass="content-area">
+<ScrollPane fitToWidth="true" styleClass="content-area" 
+            xmlns="http://javafx.com/javafx/17.0.2-ea" 
+            xmlns:fx="http://javafx.com/fxml/1">
     <VBox spacing="20" style="-fx-padding: 25px;">
         <!-- Header with refresh controls -->
         <HBox spacing="15" alignment="CENTER_LEFT">
