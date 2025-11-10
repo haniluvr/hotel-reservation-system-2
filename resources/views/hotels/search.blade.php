@@ -173,7 +173,7 @@
                                 <div class="flex justify-between items-start mb-4">
                                     <div>
                                         <h3 class="text-xl font-semibold text-white mb-2">{{ $room->room_type }}</h3>
-                                        <p class="text-gray-400 mb-2">{{ $room->hotel->name }}, {{ $room->hotel->city }}</p>
+                                        <p class="text-gray-400 mb-2">Belmont Hotel, El Nido, Palawan</p>
                                         
                                         <!-- Room Details -->
                                         <div class="flex items-center space-x-4 mb-3 text-sm text-gray-400">

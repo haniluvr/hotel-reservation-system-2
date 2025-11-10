@@ -48,7 +48,7 @@
                     <div class="bg-gray-800 rounded-lg p-4 space-y-3">
                         <div class="flex justify-between">
                             <span class="text-gray-300">Hotel:</span>
-                            <span class="font-medium text-white">{{ $booking->room->hotel->name }}</span>
+                            <span class="font-medium text-white">Belmont Hotel</span>
                         </div>
                         <div class="flex justify-between">
                             <span class="text-gray-300">Room Type:</span>

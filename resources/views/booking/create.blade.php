@@ -154,7 +154,7 @@
                     <!-- Room Info -->
                     <div class="mb-6">
                         <h3 class="font-semibold text-white mb-2">{{ $room->room_type }}</h3>
-                        <p class="text-sm text-gray-400 mb-4">{{ $hotel->name }}</p>
+                        <p class="text-sm text-gray-400 mb-4">Belmont Hotel</p>
                         <div class="space-y-2 text-sm text-gray-300">
                             <div class="flex justify-between">
                                 <span>Check-in:</span>

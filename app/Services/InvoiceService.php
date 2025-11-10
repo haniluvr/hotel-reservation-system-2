@@ -13,7 +13,7 @@ class InvoiceService
      */
     public function generateInvoice(Reservation $reservation): string
     {
-        $reservation->load(['user', 'room.hotel', 'payment']);
+        $reservation->load(['user', 'room', 'payment']);
 
         $data = [
             'reservation' => $reservation,
@@ -27,7 +27,12 @@ class InvoiceService
             ],
         ];
 
-        $pdf = Pdf::loadView('invoices.show', $data);
+        $pdf = Pdf::loadView('invoices.show', $data)
+            ->setPaper('a4', 'portrait')
+            ->setOption('margin-top', 10)
+            ->setOption('margin-bottom', 10)
+            ->setOption('margin-left', 10)
+            ->setOption('margin-right', 10);
         
         return $pdf->output();
     }
@@ -50,7 +55,7 @@ class InvoiceService
      */
     public function downloadInvoice(Reservation $reservation)
     {
-        $reservation->load(['user', 'room.hotel', 'payment']);
+        $reservation->load(['user', 'room', 'payment']);
 
         $data = [
             'reservation' => $reservation,
@@ -64,7 +69,12 @@ class InvoiceService
             ],
         ];
 
-        $pdf = Pdf::loadView('invoices.show', $data);
+        $pdf = Pdf::loadView('invoices.show', $data)
+            ->setPaper('a4', 'portrait')
+            ->setOption('margin-top', 10)
+            ->setOption('margin-bottom', 10)
+            ->setOption('margin-left', 10)
+            ->setOption('margin-right', 10);
         
         return $pdf->download('invoice-' . $reservation->reservation_number . '.pdf');
     }

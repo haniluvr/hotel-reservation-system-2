@@ -33,7 +33,6 @@
                                     
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-300">
                                         <div>
-                                            <span class="font-medium text-gray-400">Hotel:</span> <span class="text-white">{{ $booking->room->hotel->name }}</span>
                                         </div>
                                         <div>
                                             <span class="font-medium text-gray-400">Reservation #:</span> <span class="text-white">{{ $booking->reservation_number }}</span>

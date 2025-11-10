@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Hotel;
 use App\Models\Room;
 use App\Services\HotelBedsService;
 
@@ -21,16 +20,8 @@ class HomeController extends Controller
      */
     public function index()
     {
-        // Get Belmont Hotel (single property)
-        $hotel = Hotel::with(['rooms' => function ($query) {
-            $query->active()->available();
-        }])
-        ->where('name', 'Belmont Hotel')
-        ->firstOrFail();
-
         // Get featured rooms (first 6 active rooms, regardless of availability)
-        $featuredRooms = $hotel->rooms()
-            ->active()
+        $featuredRooms = Room::active()
             ->limit(6)
             ->get()
             ->map(function ($room) {
@@ -72,7 +63,7 @@ class HomeController extends Controller
             ]
         ];
 
-        return view('home', compact('hotel', 'featuredRooms', 'popularDestinations'));
+        return view('home', compact('featuredRooms', 'popularDestinations'));
     }
 
     /**
@@ -80,11 +71,8 @@ class HomeController extends Controller
      */
     public function search(Request $request)
     {
-        // Get Belmont Hotel
-        $hotel = Hotel::where('name', 'Belmont Hotel')->firstOrFail();
-
         // Start with all rooms
-        $query = Room::where('hotel_id', $hotel->id)->active();
+        $query = Room::active();
 
         // Apply search filters
         if ($request->filled('room_type')) {
@@ -130,27 +118,18 @@ class HomeController extends Controller
                 break;
         }
 
-        $rooms = $query->with('hotel')->paginate(12);
+        $rooms = $query->paginate(12);
 
-        return view('hotels.search', compact('rooms', 'hotel'));
+        return view('hotels.search', compact('rooms'));
     }
 
     /**
-     * Show hotel details
+     * Show hotel details (redirected to accommodations since hotels are removed)
      */
     public function showHotel($id)
     {
-        $hotel = Hotel::with(['rooms' => function ($q) {
-            $q->active();
-        }])->findOrFail($id);
-
-        $relatedHotels = Hotel::where('city', $hotel->city)
-            ->where('id', '!=', $hotel->id)
-            ->active()
-            ->limit(4)
-            ->get();
-
-        return view('hotels.show', compact('hotel', 'relatedHotels'));
+        // Redirect to accommodations page since hotels are no longer used
+        return redirect()->route('accommodations');
     }
 
     /**
@@ -162,16 +141,27 @@ class HomeController extends Controller
             ->active()
             ->firstOrFail();
 
-        $hotel = $room->hotel;
-
-        $similarRooms = Room::where('hotel_id', $hotel->id)
-            ->where('id', '!=', $room->id)
+        // Get similar rooms (same room type category)
+        $similarRooms = Room::where('id', '!=', $room->id)
             ->where('room_type', 'like', '%' . explode(' ', $room->room_type)[0] . '%')
             ->active()
             ->limit(3)
             ->get();
 
-        return view('rooms.show', compact('hotel', 'room', 'similarRooms'));
+        // Load approved reviews for this room
+        $reviews = \App\Models\Review::where('room_id', $room->id)
+            ->approved()
+            ->with('user')
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Calculate average rating
+        $averageRating = \App\Models\Review::where('room_id', $room->id)
+            ->approved()
+            ->avg('rating') ?? 0;
+
+        return view('rooms.show', compact('room', 'similarRooms', 'reviews', 'averageRating'));
     }
 
     /**
@@ -185,16 +175,17 @@ class HomeController extends Controller
             return response()->json([]);
         }
 
-        $suggestions = Hotel::select('city', 'country')
-            ->where('city', 'like', '%' . $query . '%')
+        // Return room type suggestions instead of hotel cities
+        $suggestions = Room::select('room_type')
+            ->where('room_type', 'like', '%' . $query . '%')
             ->active()
             ->distinct()
             ->limit(5)
             ->get()
-            ->map(function ($hotel) {
+            ->map(function ($room) {
                 return [
-                    'text' => $hotel->city . ', ' . $hotel->country,
-                    'value' => $hotel->city
+                    'text' => $room->room_type,
+                    'value' => $room->room_type
                 ];
             });
 
@@ -206,11 +197,8 @@ class HomeController extends Controller
      */
     public function accommodations(Request $request)
     {
-        // Get Belmont Hotel (should be the only hotel)
-        $hotel = Hotel::firstOrFail();
-
         // Start with all rooms
-        $query = Room::where('hotel_id', $hotel->id)->active();
+        $query = Room::active();
 
         // Apply filters
         if ($request->filled('search')) {
@@ -262,6 +250,6 @@ class HomeController extends Controller
 
         $rooms = $query->paginate(12);
 
-        return view('accommodations.index', compact('rooms', 'hotel'));
+        return view('accommodations.index', compact('rooms'));
     }
 }

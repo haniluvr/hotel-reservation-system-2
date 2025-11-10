@@ -76,7 +76,6 @@ class BookingController extends Controller
 
         return view('booking.create', [
             'room' => $room,
-            'hotel' => $room->hotel,
             'checkIn' => $request->check_in,
             'checkOut' => $request->check_out,
             'adults' => $adults,

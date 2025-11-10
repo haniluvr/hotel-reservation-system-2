@@ -131,12 +131,12 @@ class PaymentController extends Controller
             $paymentData = [
                 'external_id' => $reservation->reservation_number,
                 'amount' => $reservation->total_amount,
-                'description' => "Hotel Reservation - {$reservation->room->hotel->name} - {$reservation->room->room_type}",
+                'description' => "Hotel Reservation - Belmont Hotel - {$reservation->room->room_type}",
                 'customer' => $customerData,
                 'currency' => 'PHP',
                 'items' => [
                     [
-                        'name' => "{$reservation->room->room_type} - {$reservation->room->hotel->name}",
+                        'name' => "{$reservation->room->room_type} - Belmont Hotel",
                         'quantity' => 1,
                         'price' => $reservation->total_amount,
                     ]

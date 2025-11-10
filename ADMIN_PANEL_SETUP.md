@@ -86,12 +86,32 @@ java --module-path /path/to/javafx/lib --add-modules javafx.controls,javafx.fxml
 
 ## Default Login Credentials
 
-The admin panel uses the same user database as the Laravel application. To log in:
+The admin panel uses the `admins` table for authentication. To log in, you need to create an admin account:
 
-- **Email:** `admin@belmonthotel.com`
-- **Password:** `password` (default from Laravel seeder)
+**Creating an Admin Account:**
 
-**Note:** If you haven't run the Laravel seeders, create an admin user in the database or use any existing user account. The system checks if the email contains "admin" to determine admin privileges.
+You can create an admin account using Laravel Tinker:
+
+```bash
+php artisan tinker
+```
+
+Then run:
+```php
+App\Models\Admin::create([
+    'name' => 'Admin User',
+    'email' => 'admin@belmonthotel.com',
+    'password' => bcrypt('password'),
+    'is_active' => true
+]);
+```
+
+**Login Requirements:**
+- Email must exist in the `admins` table
+- Account must be active (`is_active = true`)
+- Password must match the hashed password in the database
+
+**Note:** The admin panel now exclusively uses the `admins` table. Regular users from the `users` table cannot log into the admin panel.
 
 ## Application Features
 
@@ -207,7 +227,8 @@ admin-panel/
 
 The admin panel expects the following tables (created by Laravel migrations):
 
-- `users` - User accounts
+- `admins` - Admin accounts (for login authentication)
+- `users` - Regular user accounts
 - `hotels` - Hotel information
 - `rooms` - Room details
 - `reservations` - Booking records
@@ -222,7 +243,7 @@ Ensure all migrations have been run in the Laravel application before using the 
 
 2. **Database Credentials:** Never commit `config.properties` with real credentials to version control. Use environment-specific configuration files.
 
-3. **Admin Access:** Currently, admin access is determined by email containing "admin". Consider adding an `is_admin` column to the users table for better security.
+3. **Admin Access:** Admin access is now controlled through the dedicated `admins` table. Only accounts in the `admins` table with `is_active = true` can log into the admin panel.
 
 4. **Connection Pooling:** The application uses HikariCP for efficient database connection management.
 

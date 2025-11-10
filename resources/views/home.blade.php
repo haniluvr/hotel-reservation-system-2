@@ -169,7 +169,7 @@
 @if(isset($featuredRooms) && $featuredRooms->count() > 0)
 <div 
     data-react-component="RoomsCarousel" 
-    data-react-props="{{ json_encode(['rooms' => $featuredRooms, 'hotelId' => $hotel->id]) }}"
+    data-react-props="{{ json_encode(['rooms' => $featuredRooms]) }}"
     style="min-height: 400px;"
 >
     <!-- Loading fallback -->
@@ -317,7 +317,7 @@
         <p class="text-xl text-gray-300 mb-8">
             Start exploring our luxurious rooms at Belmont Hotel El Nido and find your perfect stay today.
         </p>
-        <a href="{{ route('hotels.show', $hotel->id) }}" 
+        <a href="{{ route('accommodations.index') }}" 
            class="inline-flex items-center px-8 py-4 bg-primary-green text-white font-semibold rounded-lg hover:bg-primary-green-hover transition-all duration-300 transform hover:scale-105 shadow-xl">
             View All Rooms
             <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">

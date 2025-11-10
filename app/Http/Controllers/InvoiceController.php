@@ -14,7 +14,6 @@ class InvoiceController extends Controller
     public function __construct(InvoiceService $invoiceService)
     {
         $this->invoiceService = $invoiceService;
-        $this->middleware('auth');
     }
 
     /**
@@ -22,7 +21,7 @@ class InvoiceController extends Controller
      */
     public function download($reservationId)
     {
-        $reservation = Reservation::with(['user', 'room.hotel', 'payment'])
+        $reservation = Reservation::with(['user', 'room', 'payment'])
             ->where('user_id', Auth::id())
             ->findOrFail($reservationId);
 
@@ -34,7 +33,7 @@ class InvoiceController extends Controller
      */
     public function show($reservationId)
     {
-        $reservation = Reservation::with(['user', 'room.hotel', 'payment'])
+        $reservation = Reservation::with(['user', 'room', 'payment'])
             ->where('user_id', Auth::id())
             ->findOrFail($reservationId);
 

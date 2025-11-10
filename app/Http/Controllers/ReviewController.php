@@ -12,17 +12,16 @@ use Illuminate\Support\Facades\Log;
 class ReviewController extends Controller
 {
     /**
-     * Display a listing of reviews for a hotel.
+     * Display a listing of reviews.
      */
-    public function index(Request $request, $hotelId)
+    public function index(Request $request)
     {
         $reviews = Review::with(['user', 'room'])
-            ->where('hotel_id', $hotelId)
             ->approved()
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
-        return view('reviews.index', compact('reviews', 'hotelId'));
+        return view('reviews.index', compact('reviews'));
     }
 
     /**
@@ -30,7 +29,7 @@ class ReviewController extends Controller
      */
     public function create($reservationId)
     {
-        $reservation = Reservation::with(['room.hotel', 'review'])
+        $reservation = Reservation::with(['room', 'review'])
             ->where('user_id', Auth::id())
             ->findOrFail($reservationId);
 
@@ -54,7 +53,7 @@ class ReviewController extends Controller
      */
     public function store(StoreReviewRequest $request)
     {
-        $reservation = Reservation::with(['room.hotel'])
+        $reservation = Reservation::with(['room'])
             ->where('user_id', Auth::id())
             ->findOrFail($request->reservation_id);
 
@@ -72,7 +71,7 @@ class ReviewController extends Controller
             $review = Review::create([
                 'user_id' => Auth::id(),
                 'reservation_id' => $reservation->id,
-                'hotel_id' => $reservation->room->hotel_id,
+                'hotel_id' => null, // Hotels table removed
                 'room_id' => $reservation->room_id,
                 'rating' => $request->rating,
                 'comment' => $request->comment,
@@ -92,7 +91,7 @@ class ReviewController extends Controller
      */
     public function edit($id)
     {
-        $review = Review::with(['reservation.room.hotel'])
+        $review = Review::with(['reservation.room'])
             ->where('user_id', Auth::id())
             ->findOrFail($id);
 

@@ -84,7 +84,8 @@ public class LoginController {
                 // Load dashboard
                 loadDashboard();
             } else {
-                showAlert(Alert.AlertType.ERROR, "Login Failed", "Invalid email or password.");
+                showAlert(Alert.AlertType.ERROR, "Login Failed", 
+                    "Invalid email or password. Please check your credentials and try again.");
                 passwordField.clear();
             }
         } catch (SQLException e) {
@@ -97,14 +98,14 @@ public class LoginController {
     }
 
     /**
-     * Authenticate user against database.
-     * @param email User email
-     * @param password User password (plain text, will be checked against hashed password)
+     * Authenticate admin against database using admins table.
+     * @param email Admin email
+     * @param password Admin password (plain text, will be checked against hashed password)
      * @return true if authentication successful
      * @throws SQLException if database error occurs
      */
     private boolean authenticateUser(String email, String password) throws SQLException {
-        String query = "SELECT id, name, email, password FROM users WHERE email = ?";
+        String query = "SELECT id, name, email, password, is_active FROM admins WHERE email = ?";
         
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -113,22 +114,24 @@ public class LoginController {
             ResultSet rs = stmt.executeQuery();
 
             if (rs.next()) {
+                // Check if admin is active
+                boolean isActive = rs.getBoolean("is_active");
+                if (!isActive) {
+                    showAlert(Alert.AlertType.ERROR, "Account Disabled", 
+                        "Your admin account has been disabled. Please contact the system administrator.");
+                    return false;
+                }
+                
                 String hashedPassword = rs.getString("password");
                 
                 // Check if password matches (using Laravel's bcrypt hash verification)
-                // For now, we'll use a simple check. In production, use BCrypt library
-                // Since Laravel uses bcrypt, we need to verify using BCrypt
                 if (verifyPassword(password, hashedPassword)) {
-                    // Check if user is admin (by email for now, or add is_admin field)
-                    boolean isAdmin = email.equals("admin@belmonthotel.com") || 
-                                    email.toLowerCase().contains("admin");
-                    
-                    // Set session
+                    // Set session - all admins have admin privileges
                     SessionManager.getInstance().setSession(
                         rs.getInt("id"),
                         rs.getString("name"),
                         rs.getString("email"),
-                        isAdmin
+                        true // All users from admins table are admins
                     );
                     
                     return true;

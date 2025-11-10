@@ -52,6 +52,14 @@ class Room extends Model
     }
 
     /**
+     * Get the reviews for the room.
+     */
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
+    /**
      * Scope a query to only include active rooms.
      */
     public function scopeActive($query)

@@ -23,7 +23,7 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <h2 class="text-2xl font-bold mb-2">{{ $booking->room->room_type }}</h2>
-                        <p class="text-white/90">{{ $booking->room->hotel->name }}</p>
+                        <p class="text-white/90">Belmont Hotel</p>
                     </div>
                     <span class="px-4 py-2 bg-white/20 rounded-full text-sm font-medium">
                         {{ ucfirst($booking->status) }}

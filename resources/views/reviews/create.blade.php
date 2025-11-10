@@ -13,7 +13,7 @@
                 Back to Booking
             </a>
             <h1 class="text-3xl md:text-4xl font-bold text-white mb-2">Write a Review</h1>
-            <p class="text-gray-300">Share your experience with {{ $reservation->room->hotel->name }}</p>
+            <p class="text-gray-300">Share your experience with Belmont Hotel</p>
         </div>
 
         <div class="bg-gray-900 rounded-2xl shadow-lg border border-gray-800 p-6">
@@ -23,7 +23,7 @@
                 <div class="space-y-2 text-sm">
                     <div class="flex justify-between">
                         <span class="text-gray-300">Hotel:</span>
-                        <span class="font-medium text-white">{{ $reservation->room->hotel->name }}</span>
+                        <span class="font-medium text-white">Belmont Hotel</span>
                     </div>
                     <div class="flex justify-between">
                         <span class="text-gray-300">Room:</span>

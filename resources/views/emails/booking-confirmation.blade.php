@@ -99,7 +99,7 @@
                 
                 <div class="detail-row">
                     <span class="label">Hotel:</span>
-                    <span class="value">{{ $reservation->room->hotel->name }}</span>
+                    <span class="value">Belmont Hotel</span>
                 </div>
                 
                 <div class="detail-row">
