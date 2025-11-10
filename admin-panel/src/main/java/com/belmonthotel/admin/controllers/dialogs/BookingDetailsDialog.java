@@ -70,14 +70,12 @@ public class BookingDetailsDialog extends Dialog<Void> {
     
     private void loadBookingDetails() {
         String query = "SELECT r.*, u.name as guest_name, u.email as guest_email, u.phone as guest_phone, " +
-                      "h.name as hotel_name, h.address as hotel_address, h.city, h.country, " +
                       "rm.room_type, rm.description as room_description, rm.price_per_night, " +
                       "p.id as payment_id, p.status as payment_status, p.amount as payment_amount, " +
                       "p.payment_method, p.paid_at, p.xendit_invoice_id " +
                       "FROM reservations r " +
                       "JOIN users u ON r.user_id = u.id " +
                       "JOIN rooms rm ON r.room_id = rm.id " +
-                      "JOIN hotels h ON rm.hotel_id = h.id " +
                       "LEFT JOIN payments p ON r.id = p.reservation_id " +
                       "WHERE r.id = ?";
         
@@ -136,9 +134,9 @@ public class BookingDetailsDialog extends Dialog<Void> {
         hotelGrid.setVgap(8);
         hotelGrid.setPadding(new Insets(10));
         
-        addGridRow(hotelGrid, "Hotel:", rs.getString("hotel_name"), 0);
-        addGridRow(hotelGrid, "Address:", rs.getString("hotel_address"), 1);
-        addGridRow(hotelGrid, "Location:", rs.getString("city") + ", " + rs.getString("country"), 2);
+        addGridRow(hotelGrid, "Hotel:", "Belmont Hotel", 0);
+        addGridRow(hotelGrid, "Address:", "El Nido, Palawan", 1);
+        addGridRow(hotelGrid, "Location:", "El Nido, Palawan, Philippines", 2);
         addGridRow(hotelGrid, "Room Type:", rs.getString("room_type"), 3);
         if (rs.getString("room_description") != null) {
             Label descLabel = new Label(rs.getString("room_description"));

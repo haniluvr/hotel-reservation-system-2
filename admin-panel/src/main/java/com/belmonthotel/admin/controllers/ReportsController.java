@@ -336,12 +336,11 @@ public class ReportsController implements Initializable {
             cell.setCellStyle(headerStyle);
         }
 
-        String query = "SELECT r.id, r.reservation_number, u.name as guest_name, h.name as hotel_name, " +
+        String query = "SELECT r.id, r.reservation_number, u.name as guest_name, " +
                       "r.check_in_date, r.check_out_date, r.status, r.total_amount " +
                       "FROM reservations r " +
                       "JOIN users u ON r.user_id = u.id " +
                       "JOIN rooms rm ON r.room_id = rm.id " +
-                      "JOIN hotels h ON rm.hotel_id = h.id " +
                       "WHERE r.check_in_date BETWEEN ? AND ? " +
                       "ORDER BY r.created_at DESC";
 
@@ -362,7 +361,7 @@ public class ReportsController implements Initializable {
                 org.apache.poi.ss.usermodel.Cell cell2 = row.createCell(2);
                 cell2.setCellValue(rs.getString("guest_name"));
                 org.apache.poi.ss.usermodel.Cell cell3 = row.createCell(3);
-                cell3.setCellValue(rs.getString("hotel_name"));
+                cell3.setCellValue("Belmont Hotel");
                 org.apache.poi.ss.usermodel.Cell cell4 = row.createCell(4);
                 cell4.setCellValue(rs.getDate("check_in_date").toString());
                 org.apache.poi.ss.usermodel.Cell cell5 = row.createCell(5);
@@ -668,9 +667,9 @@ public class ReportsController implements Initializable {
         // Generate data based on report type (similar to Excel generation)
         if (reportType.equals("Booking Report")) {
             writer.println("ID,Reservation Number,Guest Name,Hotel,Check-in,Check-out,Status,Amount");
-            String query = "SELECT r.id, r.reservation_number, u.name, h.name, r.check_in_date, r.check_out_date, r.status, r.total_amount " +
+            String query = "SELECT r.id, r.reservation_number, u.name, r.check_in_date, r.check_out_date, r.status, r.total_amount " +
                           "FROM reservations r JOIN users u ON r.user_id = u.id " +
-                          "JOIN rooms rm ON r.room_id = rm.id JOIN hotels h ON rm.hotel_id = h.id " +
+                          "JOIN rooms rm ON r.room_id = rm.id " +
                           "WHERE r.check_in_date BETWEEN ? AND ? ORDER BY r.created_at DESC";
             try (Connection conn = DatabaseConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(query)) {
@@ -679,8 +678,8 @@ public class ReportsController implements Initializable {
                 ResultSet rs = stmt.executeQuery();
                 while (rs.next()) {
                     writer.printf("%d,%s,%s,%s,%s,%s,%s,%.2f%n",
-                        rs.getInt(1), rs.getString(2), rs.getString(3), rs.getString(4),
-                        rs.getDate(5), rs.getDate(6), rs.getString(7), rs.getDouble(8));
+                        rs.getInt(1), rs.getString(2), rs.getString(3), "Belmont Hotel",
+                        rs.getDate(4), rs.getDate(5), rs.getString(6), rs.getDouble(7));
                 }
             }
         }

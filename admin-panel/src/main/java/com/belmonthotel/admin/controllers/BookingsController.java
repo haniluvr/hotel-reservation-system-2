@@ -202,11 +202,10 @@ public class BookingsController implements Initializable {
         String query = "SELECT r.id, r.reservation_number, r.check_in_date, r.check_out_date, " +
                       "r.status, r.total_amount, r.adults, r.children, " +
                       "u.name as guest_name, u.email as guest_email, " +
-                      "h.name as hotel_name, rm.room_type " +
+                      "rm.room_type " +
                       "FROM reservations r " +
                       "JOIN users u ON r.user_id = u.id " +
                       "JOIN rooms rm ON r.room_id = rm.id " +
-                      "JOIN hotels h ON rm.hotel_id = h.id " +
                       "ORDER BY r.created_at DESC";
 
         try (Connection conn = DatabaseConnection.getConnection();
@@ -219,7 +218,7 @@ public class BookingsController implements Initializable {
                 booking.setReservationNumber(rs.getString("reservation_number"));
                 booking.setGuestName(rs.getString("guest_name"));
                 booking.setGuestEmail(rs.getString("guest_email"));
-                booking.setHotelName(rs.getString("hotel_name"));
+                booking.setHotelName("Belmont Hotel");
                 booking.setRoomType(rs.getString("room_type"));
                 booking.setCheckInDate(rs.getDate("check_in_date").toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
                 booking.setCheckOutDate(rs.getDate("check_out_date").toLocalDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));

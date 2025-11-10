@@ -167,10 +167,9 @@ public class RoomsController implements Initializable {
         roomsList.clear();
         
         String query = "SELECT r.id, r.room_type, r.description, r.price_per_night, r.quantity, r.available_quantity, " +
-                      "r.max_guests, r.max_adults, r.max_children, r.amenities, r.is_active, h.name as hotel_name " +
+                      "r.max_guests, r.max_adults, r.max_children, r.amenities, r.is_active " +
                       "FROM rooms r " +
-                      "JOIN hotels h ON r.hotel_id = h.id " +
-                      "ORDER BY h.name, r.room_type";
+                      "ORDER BY r.room_type";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(query);
@@ -179,7 +178,7 @@ public class RoomsController implements Initializable {
             while (rs.next()) {
                 Room room = new Room();
                 room.setId(rs.getInt("id"));
-                room.setHotelName(rs.getString("hotel_name"));
+                room.setHotelName("Belmont Hotel");
                 room.setRoomType(rs.getString("room_type"));
                 if (rs.getString("description") != null) {
                     room.setDescription(rs.getString("description"));
@@ -320,24 +319,9 @@ public class RoomsController implements Initializable {
      * Show room form for add/edit.
      */
     private void showRoomForm(Room room) {
-        // Get the only hotel (Belmont Hotel)
-        final int[] hotelIdArray = {1}; // Since there's only one hotel
-        String[] hotelNameArray = {"Belmont Hotel"};
-        
-        try (Connection conn = DatabaseConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement("SELECT id, name FROM hotels LIMIT 1");
-             ResultSet rs = stmt.executeQuery()) {
-            
-            if (rs.next()) {
-                hotelIdArray[0] = rs.getInt("id");
-                hotelNameArray[0] = rs.getString("name");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        
-        final int hotelId = hotelIdArray[0];
-        final String hotelName = hotelNameArray[0];
+        // Hotels table removed, using hardcoded hotel name
+        final int hotelId = 0; // hotel_id is now nullable, set to NULL
+        final String hotelName = "Belmont Hotel";
 
         Dialog<Room> dialog = new Dialog<>();
         dialog.setTitle(room == null ? "Add Room" : "Edit Room");
@@ -462,7 +446,7 @@ public class RoomsController implements Initializable {
              PreparedStatement stmt = conn.prepareStatement(query)) {
             
             double price = Double.parseDouble(room.getPricePerNight().replace("₱", "").replace(",", ""));
-            stmt.setInt(1, room.getHotelId());
+            stmt.setNull(1, java.sql.Types.INTEGER); // hotel_id is now nullable
             stmt.setString(2, room.getRoomType());
             stmt.setString(3, room.getDescription());
             stmt.setDouble(4, price);
@@ -591,7 +575,10 @@ public class RoomsController implements Initializable {
             if (rs.next()) {
                 Room room = new Room();
                 room.setId(rs.getInt("id"));
-                room.setHotelId(rs.getInt("hotel_id"));
+                // hotel_id is now nullable, set to 0 if null
+                int hotelId = rs.getInt("hotel_id");
+                if (rs.wasNull()) hotelId = 0;
+                room.setHotelId(hotelId);
                 room.setRoomType(rs.getString("room_type"));
                 if (rs.getString("description") != null) {
                     room.setDescription(rs.getString("description"));
